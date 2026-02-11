@@ -2,6 +2,7 @@ package com.tally.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -68,11 +69,15 @@ public class SecurityConfig {
      * - BCrypt password hashing
      * - JWT token-based authentication
      *
+     * SECURITY: This bean is ONLY active in dev and test profiles.
+     * Production environments MUST implement proper authentication.
+     *
      * Credentials:
      * - Username: admin
      * - Password: admin (plaintext, using {noop} prefix to disable encoding)
      */
     @Bean
+    @Profile("!prod") // SECURITY: Prevent hardcoded credentials in production
     public UserDetailsService userDetailsService() {
         UserDetails user = User.builder()
             .username("admin")
