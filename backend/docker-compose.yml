@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Local PostgreSQL database for development
+  postgres:
+    image: postgres:16-alpine
+    container_name: tally-postgres-dev
+    environment:
+      POSTGRES_DB: tally_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"  # Map to 5434 to avoid conflicts with other postgres instances
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: pgAdmin for database management (web UI)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: tally-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@tally.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+    driver: local
