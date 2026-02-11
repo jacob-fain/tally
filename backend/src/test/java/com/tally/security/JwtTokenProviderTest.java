@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -15,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class JwtTokenProviderTest {
 
@@ -27,11 +30,15 @@ class JwtTokenProviderTest {
 
     @BeforeEach
     void setUp() {
+        Environment mockEnvironment = mock(Environment.class);
+        when(mockEnvironment.getActiveProfiles()).thenReturn(new String[]{"test"});
+
         jwtTokenProvider = new JwtTokenProvider(
                 TEST_SECRET,
                 ACCESS_TOKEN_EXPIRATION,
                 REFRESH_TOKEN_EXPIRATION,
-                ISSUER
+                ISSUER,
+                mockEnvironment
         );
         userDetails = User.withUsername("testuser")
                 .password("password")
@@ -81,11 +88,15 @@ class JwtTokenProviderTest {
 
     @Test
     void validateToken_ExpiredToken_ThrowsInvalidTokenException() {
+        Environment mockEnvironment = mock(Environment.class);
+        when(mockEnvironment.getActiveProfiles()).thenReturn(new String[]{"test"});
+
         JwtTokenProvider shortExpiryProvider = new JwtTokenProvider(
                 TEST_SECRET,
                 1L, // 1 millisecond
                 REFRESH_TOKEN_EXPIRATION,
-                ISSUER
+                ISSUER,
+                mockEnvironment
         );
         String token = shortExpiryProvider.generateAccessToken(userDetails);
 

@@ -115,6 +115,11 @@ SERVER_PORT=9090              # API server port
 DATABASE_URL=jdbc:postgresql://localhost:5434/tally_db
 DATABASE_USERNAME=postgres
 DATABASE_PASSWORD=postgres
+
+# JWT Authentication (REQUIRED for production)
+JWT_SECRET=your-secure-random-jwt-secret
+# Generate with: openssl rand -base64 64
+# WARNING: Application will refuse to start in production mode without setting this!
 ```
 
 ## API Documentation
