@@ -101,12 +101,12 @@ class JwtTokenProviderTest {
         String token = shortExpiryProvider.generateAccessToken(userDetails);
 
         try {
-            Thread.sleep(10);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
-        assertThrows(InvalidTokenException.class, () -> jwtTokenProvider.validateToken(token));
+        assertThrows(InvalidTokenException.class, () -> shortExpiryProvider.validateToken(token));
     }
 
     @Test
