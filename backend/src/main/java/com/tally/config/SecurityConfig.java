@@ -1,30 +1,31 @@
 package com.tally.config;
 
+import com.tally.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
  * Spring Security configuration for Tally Backend.
  *
- * Current Phase 1 Setup:
- * - Health check endpoint (/api/health) is publicly accessible
- * - All other endpoints require HTTP Basic Authentication (temporary)
- * - In-memory user for testing (username: admin, password: admin)
- *
- * Phase 2 Plan:
- * - Replace HTTP Basic with JWT token authentication
- * - Add user registration and login endpoints
- * - Use BCrypt password hashing with database storage
- * - Implement refresh tokens for security
+ * Phase 2 Setup (JWT Authentication):
+ * - JWT token-based authentication (stateless)
+ * - Public endpoints: /api/health, /api/auth/* (register, login, refresh)
+ * - Protected endpoints: All other /api/** endpoints
+ * - BCrypt password hashing with database storage
+ * - Access tokens (15 min) and refresh tokens (7 days)
  *
  * Why permit health checks?
  * - Monitoring tools (Prometheus, Datadog) need unauthenticated access
@@ -35,53 +36,67 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
     /**
-     * Configure HTTP security rules.
+     * Configure HTTP security rules with JWT authentication.
      *
      * Security rules are evaluated top-to-bottom (first match wins):
-     * 1. /api/health → Permit all (public access)
-     * 2. All other requests → Require authentication
+     * 1. /api/auth/register, /api/auth/login, /api/auth/refresh → Public
+     * 2. /api/health → Public
+     * 3. All other /api/** requests → Require JWT authentication
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints (no authentication required)
+                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh").permitAll()
                 .requestMatchers("/api/health").permitAll()
-                // All other endpoints require authentication
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )
-            // Enable HTTP Basic Authentication (temporary for Phase 1)
-            .httpBasic(Customizer.withDefaults())
-            // Disable CSRF for now (will be enabled with JWT in Phase 2)
-            // Note: CSRF not needed for stateless JWT authentication
-            .csrf(csrf -> csrf.disable());
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     /**
-     * In-memory user for testing (Phase 1 only).
+     * BCrypt password encoder for secure password hashing.
+     * Uses default strength (10 rounds).
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * DEPRECATED: In-memory user for Phase 1 backwards compatibility.
      *
-     * WARNING: This is insecure and only for Phase 1 development!
-     * Phase 2 will replace this with:
-     * - Database-backed UserDetailsService
+     * WARNING: This is no longer used in Phase 2 (JWT authentication)!
+     * Kept only for potential backwards compatibility with Phase 1 tests.
+     *
+     * Phase 2 now uses:
+     * - CustomUserDetailsService (database-backed)
      * - BCrypt password hashing
      * - JWT token-based authentication
      *
-     * SECURITY: This bean is ONLY active in dev and test profiles.
-     * Production environments MUST implement proper authentication.
-     *
-     * Credentials:
-     * - Username: admin
-     * - Password: admin (plaintext, using {noop} prefix to disable encoding)
+     * SECURITY: This bean is ONLY active when explicitly enabled.
+     * It should NOT be used in normal operation.
      */
     @Bean
-    @Profile("!prod") // SECURITY: Prevent hardcoded credentials in production
-    public UserDetailsService userDetailsService() {
+    @Profile("phase1-compat") // Only load if this profile is explicitly activated
+    public UserDetailsService legacyUserDetailsService() {
         UserDetails user = User.builder()
             .username("admin")
-            .password("{noop}admin") // {noop} = no password encoding (temporary!)
+            .password("{noop}admin")
             .roles("USER")
             .build();
 
