@@ -48,7 +48,7 @@ docker-compose down -v
 
 ### Development (default)
 - **Profile:** `dev`
-- **Database:** Local Docker PostgreSQL (port 5433)
+- **Database:** Local Docker PostgreSQL (port 5434)
 - **Activate:** `SPRING_PROFILES_ACTIVE=dev` (default in .env)
 - **Logging:** Verbose (DEBUG level)
 
@@ -112,7 +112,7 @@ Configuration is managed via:
 ```bash
 SPRING_PROFILES_ACTIVE=dev    # Which profile to use
 SERVER_PORT=9090              # API server port
-DATABASE_URL=jdbc:postgresql://localhost:5433/tally_db
+DATABASE_URL=jdbc:postgresql://localhost:5434/tally_db
 DATABASE_USERNAME=postgres
 DATABASE_PASSWORD=postgres
 ```
