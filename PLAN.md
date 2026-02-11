@@ -2,10 +2,12 @@
 
 ## Project Overview
 
-A cross-platform desktop habit tracking application with cloud sync. Users can track daily habits, view year-long heatmaps, and sync data across devices via a Spring Boot backend API.
+A cross-platform desktop habit tracking application with cloud sync. Users can track daily habits through a GitHub-style year-long heatmap interface, with quick checkboxes for today and clickable cells for editing history. All data syncs across devices via a Spring Boot backend API.
 
-**Target Platforms:** Windows, Linux
+**Target Platforms:** Windows, Linux (developed in WSL with WSLg)
 **Primary Goal:** Learn Spring Boot + JavaFX while building an impressive resume project
+
+**UI Philosophy:** Heatmap-first - see your full year at a glance, not just today. Quick actions (checkboxes) combined with historical editing (click any cell).
 
 ---
 
@@ -78,6 +80,72 @@ A cross-platform desktop habit tracking application with cloud sync. Users can t
 - Sync on reconnect: Queue changes locally, push when online
 - Conflict resolution: Last-write-wins with timestamp tracking
 - Stateless API: JWT tokens, no server-side sessions
+
+---
+
+## Development Environment Setup (WSL + WSLg)
+
+### Backend Development (Current Setup)
+**Location:** WSL Ubuntu
+**Commands:** All `./mvnw` commands run in WSL terminal
+
+### JavaFX Desktop Development (WSLg)
+**Goal:** Run JavaFX GUI directly from WSL using WSLg (GUI support for WSL2)
+
+**Prerequisites:**
+- Windows 11 or Windows 10 (Build 19044+)
+- WSL2 (not WSL1)
+- Ubuntu 22.04 or later
+
+**Setup Steps:**
+```bash
+# 1. Verify WSLg is available
+wslg --version
+# If command not found, update WSL: wsl --update (in PowerShell as admin)
+
+# 2. Install required packages for GUI support
+sudo apt update
+sudo apt install -y libgtk-3-0 libgl1-mesa-glx libxrender1 libxtst6
+
+# 3. Test GUI capability (install a simple GUI app)
+sudo apt install -y x11-apps
+xeyes  # Should show a GUI window with eyes following your cursor
+# If this works, WSLg is properly configured!
+
+# 4. When ready for JavaFX (Phase 5+), run desktop app from WSL
+cd /home/jacob/repos/tally/desktop
+./mvnw javafx:run
+# GUI should display via WSLg
+```
+
+**Troubleshooting WSLg:**
+```bash
+# Check DISPLAY variable (should be set automatically)
+echo $DISPLAY
+# Expected output: :0 or :1
+
+# If GUI doesn't show, restart WSL
+# In PowerShell:
+wsl --shutdown
+wsl
+
+# Check WSL version (must be WSL2)
+wsl -l -v
+# Ensure "VERSION" column shows "2"
+```
+
+**Advantages of WSLg approach:**
+- All development stays in one environment (WSL)
+- No need to clone repo twice (Windows + Linux)
+- Use same terminal, git, and tools throughout
+- Native Linux development experience
+- WSLg provides near-native GUI performance
+
+**Fallback Plan (if WSLg doesn't work):**
+- Develop backend in WSL (current setup)
+- Clone repo on Windows side (`C:\Users\jacob\repos\tally`)
+- Run JavaFX from Windows PowerShell: `mvn javafx:run`
+- Use git to sync between WSL and Windows sides
 
 ---
 
@@ -291,39 +359,79 @@ GET    /api/sync/pull?since={timestamp}
 ---
 
 ### Phase 5: Desktop App Foundation
-**Goal:** Basic JavaFX app that can authenticate and display habits
+**Goal:** Basic JavaFX app with authentication
 
 **Tasks:**
-1. Set up JavaFX project with Maven
-2. Configure JavaFX dependencies and plugins
-3. Create main application window
-4. Build login/register screens
-5. Implement HTTP client service (call backend API)
-6. Store JWT token securely (OS keyring or encrypted file)
-7. Create main dashboard layout
-8. Implement habit list view
-9. Add "Create Habit" dialog
-10. Add "Check Off Today" functionality
-11. Test API integration
+1. Set up JavaFX project with Maven in `/desktop` directory
+2. Configure JavaFX dependencies and plugins (JavaFX 21+)
+3. Test WSLg setup - ensure GUI displays properly
+4. Create main application window (stage, scene setup)
+5. Build login screen (username, password fields)
+6. Build register screen (username, email, password fields)
+7. Implement HTTP client service (Java HttpClient or OkHttp)
+8. Implement authentication flow (login, register, JWT storage)
+9. Store JWT token securely (encrypted file or OS keyring)
+10. Add error handling for auth failures (show alerts)
+11. Test authentication end-to-end (WSL → Spring Boot API)
 
-**Deliverable:** Desktop app with login and basic habit tracking
+**Deliverable:** Desktop app with working login/register + JWT auth
 
 ---
 
-### Phase 6: Year Heatmap View
-**Goal:** The signature feature - year-long visualization
+### Phase 6: Heatmap View (Main Interface)
+**Goal:** Year-long heatmap as the primary UI - GitHub-style grid with checkboxes
+
+**UI Design:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Tally                                    [Settings] [Logout]│
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  My Habits                           [+ Add Habit]           │
+│                                                               │
+│  ☐ Morning Workout     [365-day heatmap grid]               │
+│     ████░███░░██████░░░███░░░                                │
+│     4 day streak | 78% completion                            │
+│                                                               │
+│  ☐ Read 30 min         [365-day heatmap grid]               │
+│     ████████████░░░░███░░░░░░                                │
+│     0 day streak | 62% completion                            │
+│                                                               │
+│  ☐ Meditation          [365-day heatmap grid]               │
+│     ░░░░███████████░░░███████░░                              │
+│     2 day streak | 55% completion                            │
+│                                                               │
+│  [< Previous Year]     2026     [Next Year >]                │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Interaction Model:**
+- **Checkbox per habit:** Check off today's completion (quick action)
+- **Heatmap cells:** Click any cell to toggle past days (edit history)
+- **Hover tooltips:** Show date, status, notes on hover
+- **Color intensity:** Darker = completed, lighter/empty = incomplete
+- **Stats inline:** Current streak and % shown per habit
 
 **Tasks:**
-1. Design heatmap UI component (365 day grid)
-2. Fetch heatmap data from API
-3. Render heatmap with color intensity
-4. Add hover tooltips (date, status, notes)
-5. Add navigation (previous/next year)
-6. Implement "click to edit day" functionality
-7. Add habit stats display (streaks, completion %)
-8. Polish UI/UX
+1. Design main heatmap view layout (VBox with habit rows)
+2. Create Habit row component (checkbox + name + heatmap + stats)
+3. Implement 365-day heatmap grid component (custom JavaFX control)
+4. Fetch all habits + year of logs from API on load
+5. Render heatmap cells with color intensity (use CSS styling)
+6. Implement checkbox behavior (check off today → POST to API)
+7. Implement cell click behavior (toggle any day → PUT to API)
+8. Add hover tooltips (date, completion status, notes if any)
+9. Add "Add Habit" dialog (name, description, color picker)
+10. Add "Edit Habit" dialog (right-click habit name)
+11. Add "Delete Habit" option (with confirmation)
+12. Implement year navigation (prev/next year buttons)
+13. Calculate and display stats per habit (streak, completion %)
+14. Add loading states and error handling
+15. Polish UI/UX (spacing, colors, animations)
+16. Test with multiple habits and various completion patterns
 
-**Deliverable:** Beautiful year heatmap visualization
+**Deliverable:** Fully functional heatmap interface - can track habits, view history, edit past days
 
 ---
 
