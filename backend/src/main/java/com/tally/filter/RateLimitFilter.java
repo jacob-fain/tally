@@ -1,5 +1,7 @@
 package com.tally.filter;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.FilterChain;
@@ -17,8 +19,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Rate limiting filter for authentication endpoints using Bucket4j's token bucket algorithm.
@@ -37,13 +37,22 @@ import java.util.concurrent.ConcurrentMap;
  * Current limits:
  * - Auth endpoints (/api/auth/**): 10 requests per minute per IP
  *
- * Why in-memory buckets?
- * This is a single-instance service for now. For horizontally scaled deployments,
- * use Bucket4j with Redis/Caffeine for distributed rate limiting.
+ * Bounded cache (Caffeine):
+ * IP buckets are stored in a Caffeine cache capped at 10,000 entries.
+ * Entries expire 2 minutes after last access, which:
+ * - Prevents unbounded memory growth from unique IP flooding
+ * - Naturally cleans up buckets for IPs that stop making requests
  *
- * Why not limit all endpoints?
- * Auth endpoints are the primary brute-force target. General API endpoints are
- * protected by JWT authentication, so they require valid tokens anyway.
+ * X-Forwarded-For note:
+ * We trust the X-Forwarded-For header to resolve the real client IP when
+ * running behind Railway's reverse proxy. This is safe because Railway controls
+ * the proxy layer and injects this header reliably. In a self-hosted setup
+ * without a trusted proxy, this header could be spoofed — configure
+ * server.tomcat.remoteip.trusted-proxies to restrict which proxies are trusted.
+ *
+ * Activation:
+ * Enabled by default (rate-limit.enabled=true).
+ * Set rate-limit.enabled=false in test profile to prevent test interference.
  */
 @Component
 @Order(1)
@@ -52,13 +61,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitFilter.class);
 
-    private static final int AUTH_REQUESTS_PER_MINUTE = 10;
+    static final int AUTH_REQUESTS_PER_MINUTE = 10;
+    private static final int MAX_TRACKED_IPS = 10_000;
     private static final String RATE_LIMIT_EXCEEDED_JSON =
             "{\"status\":429,\"error\":\"Too Many Requests\","
             + "\"message\":\"Rate limit exceeded. Please try again later.\"}";
 
-    // One bucket per IP address. ConcurrentHashMap is thread-safe for concurrent requests.
-    private final ConcurrentMap<String, Bucket> authBuckets = new ConcurrentHashMap<>();
+    // Caffeine cache: bounded at 10,000 IPs, expires buckets 2 min after last access.
+    // This prevents memory DoS from an attacker generating thousands of unique IPs.
+    private final Cache<String, Bucket> authBuckets = Caffeine.newBuilder()
+            .maximumSize(MAX_TRACKED_IPS)
+            .expireAfterAccess(Duration.ofMinutes(2))
+            .build();
 
     @Override
     protected void doFilterInternal(
@@ -68,7 +82,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         if (isAuthEndpoint(request)) {
             String clientIp = resolveClientIp(request);
-            Bucket bucket = authBuckets.computeIfAbsent(clientIp, ip -> createAuthBucket());
+            Bucket bucket = authBuckets.get(clientIp, ip -> createAuthBucket());
 
             if (!bucket.tryConsume(1)) {
                 log.warn("Rate limit exceeded for IP {} on {}", clientIp, request.getRequestURI());
@@ -82,33 +96,28 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean isAuthEndpoint(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        return path.startsWith("/api/auth/");
+    boolean isAuthEndpoint(HttpServletRequest request) {
+        // Skip rate limiting for CORS preflight requests.
+        // Browsers send OPTIONS before the actual POST (e.g., login). Consuming tokens
+        // on preflights would exhaust the bucket before the real request arrives.
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return false;
+        }
+        return request.getRequestURI().startsWith("/api/auth/");
     }
 
     /**
-     * Resolves the real client IP, respecting X-Forwarded-For for proxied requests.
+     * Returns the client IP as resolved by the servlet container.
      *
-     * When deployed behind a reverse proxy (Railway, Nginx, etc.), the actual client
-     * IP is in the X-Forwarded-For header, not the direct connection IP.
-     * We take the first (leftmost) value which is the original client.
+     * In production (behind Railway), configure server.forward-headers-strategy=native
+     * in application-prod.properties. Tomcat then parses X-Forwarded-For from trusted
+     * proxies and sets getRemoteAddr() to the real client IP automatically.
+     * We never parse X-Forwarded-For ourselves to avoid header spoofing.
      */
-    private String resolveClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
+    String resolveClientIp(HttpServletRequest request) {
         return request.getRemoteAddr();
     }
 
-    /**
-     * Creates a new token bucket for an IP address with the auth rate limit.
-     *
-     * Greedy refill: tokens are added as fast as possible up to capacity.
-     * With 10 tokens / 60 seconds = ~1 token every 6 seconds.
-     * A burst of 10 is allowed immediately, then throttled.
-     */
     private Bucket createAuthBucket() {
         Bandwidth limit = Bandwidth.builder()
                 .capacity(AUTH_REQUESTS_PER_MINUTE)
