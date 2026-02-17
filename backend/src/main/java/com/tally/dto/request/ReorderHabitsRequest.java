@@ -4,11 +4,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
 public record ReorderHabitsRequest(
     @NotEmpty(message = "Habit order list cannot be empty")
+    @Size(max = 500, message = "Cannot reorder more than 500 habits at once")
     @Valid
     List<HabitOrderItem> habitOrders
 ) {

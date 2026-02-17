@@ -99,19 +99,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
-    @ExceptionHandler(HabitNotOwnedByUserException.class)
-    public ResponseEntity<ErrorResponse> handleHabitNotOwnedByUser(
-            HabitNotOwnedByUserException ex,
-            HttpServletRequest request) {
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.FORBIDDEN.value(),
-                "Forbidden",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
-    }
-
     @ExceptionHandler(DailyLogNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleDailyLogNotFound(
             DailyLogNotFoundException ex,
@@ -123,19 +110,6 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
-
-    @ExceptionHandler(DailyLogNotOwnedByUserException.class)
-    public ResponseEntity<ErrorResponse> handleDailyLogNotOwnedByUser(
-            DailyLogNotOwnedByUserException ex,
-            HttpServletRequest request) {
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.FORBIDDEN.value(),
-                "Forbidden",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     @ExceptionHandler(InvalidDateRangeException.class)

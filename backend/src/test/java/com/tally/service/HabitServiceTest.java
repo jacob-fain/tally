@@ -151,17 +151,14 @@ class HabitServiceTest {
     }
 
     @Test
-    void shouldSoftDeleteHabitBySettingArchivedTrue() {
+    void shouldHardDeleteHabit() {
         when(habitRepository.findByIdAndUserId(HABIT_ID, USER_ID))
                 .thenReturn(Optional.of(activeHabit));
-        when(habitRepository.save(any(Habit.class))).thenAnswer(inv -> inv.getArgument(0));
 
         habitService.deleteHabit(HABIT_ID, USER_ID);
 
-        ArgumentCaptor<Habit> captor = ArgumentCaptor.forClass(Habit.class);
-        verify(habitRepository).save(captor.capture());
-        assertTrue(captor.getValue().getArchived());
-        assertNotNull(captor.getValue().getArchivedAt());
+        verify(habitRepository).delete(activeHabit);
+        verify(habitRepository, never()).save(any(Habit.class));
     }
 
     @Test
@@ -209,7 +206,7 @@ class HabitServiceTest {
     }
 
     @Test
-    void shouldReturnZeroStreakWhenYesterdayIsMissing() {
+    void shouldReturnStreakOfOneWhenOnlyTodayIsCompleted() {
         when(habitRepository.findByIdAndUserId(HABIT_ID, USER_ID)).thenReturn(Optional.of(activeHabit));
         // Only today's log exists, no yesterday log
         when(dailyLogRepository.findByHabitIdOrderByLogDateDesc(HABIT_ID))
@@ -217,7 +214,8 @@ class HabitServiceTest {
 
         HabitStatsResponse stats = habitService.getHabitStats(HABIT_ID, USER_ID);
 
-        assertEquals(0, stats.currentStreak());
+        // Today is completed so streak = 1 (today counts as the anchor)
+        assertEquals(1, stats.currentStreak());
     }
 
     @Test

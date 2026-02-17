@@ -78,9 +78,7 @@ public class HabitService {
     public void deleteHabit(Long habitId, Long userId) {
         Habit habit = habitRepository.findByIdAndUserId(habitId, userId)
                 .orElseThrow(() -> new HabitNotFoundException(habitId));
-        habit.setArchived(true);
-        habit.setArchivedAt(LocalDateTime.now());
-        habitRepository.save(habit);
+        habitRepository.delete(habit);
     }
 
     @Transactional
@@ -129,6 +127,9 @@ public class HabitService {
         if (startDate.isAfter(endDate)) {
             throw new InvalidDateRangeException("Start date must be before or equal to end date");
         }
+        if (ChronoUnit.DAYS.between(startDate, endDate) > 366) {
+            throw new InvalidDateRangeException("Date range cannot exceed 366 days");
+        }
 
         List<DailyLog> logs = dailyLogRepository
                 .findByHabitIdAndLogDateBetweenOrderByLogDateAsc(habitId, startDate, endDate);
@@ -157,8 +158,8 @@ public class HabitService {
     // =========================================================================
 
     /**
-     * Current streak: consecutive completed days ending with yesterday.
-     * Today is not counted (hasn't been completed yet today).
+     * Current streak: consecutive completed days ending with today or yesterday.
+     * If today is completed, streak includes today. Otherwise, falls back to yesterday.
      * Miss any day = streak resets to 0.
      */
     private int calculateCurrentStreak(List<DailyLog> logsDescending) {
@@ -166,25 +167,31 @@ public class HabitService {
             return 0;
         }
 
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
 
-        // If yesterday wasn't completed, streak is 0
-        DailyLog yesterdayLog = logsDescending.stream()
-                .filter(log -> log.getLogDate().equals(yesterday))
+        // Determine anchor: today if completed, otherwise yesterday
+        boolean todayCompleted = logsDescending.stream()
+                .anyMatch(log -> log.getLogDate().equals(today) && log.getCompleted());
+        LocalDate anchor = todayCompleted ? today : yesterday;
+
+        // Verify anchor day is completed
+        DailyLog anchorLog = logsDescending.stream()
+                .filter(log -> log.getLogDate().equals(anchor))
                 .findFirst()
                 .orElse(null);
 
-        if (yesterdayLog == null || !yesterdayLog.getCompleted()) {
+        if (anchorLog == null || !anchorLog.getCompleted()) {
             return 0;
         }
 
-        // Count consecutive completed days backwards from yesterday
+        // Count consecutive completed days backwards from anchor
         int streak = 0;
-        LocalDate expectedDate = yesterday;
+        LocalDate expectedDate = anchor;
 
         for (DailyLog log : logsDescending) {
             if (log.getLogDate().isAfter(expectedDate)) {
-                continue; // Skip today's log if it exists
+                continue; // Skip any logs newer than anchor
             }
             if (log.getLogDate().equals(expectedDate) && log.getCompleted()) {
                 streak++;
@@ -247,6 +254,7 @@ public class HabitService {
             return 0.0;
         }
 
-        return Math.round((totalCompleted / (double) daysSinceCreation) * 10000.0) / 100.0;
+        double percentage = Math.round((totalCompleted / (double) daysSinceCreation) * 10000.0) / 100.0;
+        return Math.min(100.0, percentage);
     }
 }

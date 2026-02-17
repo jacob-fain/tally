@@ -183,7 +183,7 @@ class HabitControllerIntegrationTest {
     // =========================================================================
 
     @Test
-    void shouldSoftDeleteHabitAndReturn204() {
+    void shouldDeleteHabitAndReturn204() {
         HabitResponse created = createHabit("To Delete", null, null);
 
         ResponseEntity<Void> response = authDelete("/api/habits/" + created.id());
@@ -225,7 +225,7 @@ class HabitControllerIntegrationTest {
                 new ReorderHabitsRequest.HabitOrderItem(h2.id(), 0)));
 
         ResponseEntity<Void> response = authPut("/api/habits/reorder", request, Void.class);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
         // Second habit (displayOrder=0) should now come first
         ResponseEntity<List<HabitResponse>> habits = getHabits();

@@ -6,9 +6,11 @@ import com.tally.dto.request.UpdateHabitRequest;
 import com.tally.dto.response.HabitResponse;
 import com.tally.dto.response.HabitStatsResponse;
 import com.tally.dto.response.HeatmapResponse;
+import com.tally.exception.InvalidDateRangeException;
 import com.tally.security.CustomUserDetails;
 import com.tally.service.HabitService;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -78,7 +80,7 @@ public class HabitController {
             @Valid @RequestBody ReorderHabitsRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         habitService.reorderHabits(request, userDetails.getUserId());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/stats")
@@ -94,8 +96,8 @@ public class HabitController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String month,
-            @RequestParam(required = false) LocalDate startDate,
-            @RequestParam(required = false) LocalDate endDate) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
         LocalDate start;
         LocalDate end;
@@ -107,9 +109,13 @@ public class HabitController {
             start = LocalDate.of(year, 1, 1);
             end = LocalDate.of(year, 12, 31);
         } else if (month != null) {
-            YearMonth ym = YearMonth.parse(month); // YYYY-MM
-            start = ym.atDay(1);
-            end = ym.atEndOfMonth();
+            try {
+                YearMonth ym = YearMonth.parse(month); // YYYY-MM
+                start = ym.atDay(1);
+                end = ym.atEndOfMonth();
+            } catch (Exception e) {
+                throw new InvalidDateRangeException("Invalid month format. Expected YYYY-MM (e.g. 2026-02)");
+            }
         } else {
             int currentYear = LocalDate.now().getYear();
             start = LocalDate.of(currentYear, 1, 1);

@@ -38,6 +38,9 @@ public class DailyLogService {
         if (startDate.isAfter(endDate)) {
             throw new InvalidDateRangeException("Start date must be before or equal to end date");
         }
+        if (java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) > 366) {
+            throw new InvalidDateRangeException("Date range cannot exceed 366 days");
+        }
         return dailyLogRepository
                 .findByHabitIdAndLogDateBetweenOrderByLogDateAsc(habitId, startDate, endDate)
                 .stream()
