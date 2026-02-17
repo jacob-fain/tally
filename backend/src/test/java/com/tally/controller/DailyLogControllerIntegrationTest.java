@@ -3,7 +3,6 @@ package com.tally.controller;
 import com.tally.dto.request.BatchDailyLogRequest;
 import com.tally.dto.request.CreateDailyLogRequest;
 import com.tally.dto.request.CreateHabitRequest;
-import com.tally.dto.request.LoginRequest;
 import com.tally.dto.request.RegisterRequest;
 import com.tally.dto.response.AuthResponse;
 import com.tally.dto.response.DailyLogResponse;

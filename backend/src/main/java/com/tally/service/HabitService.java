@@ -53,7 +53,7 @@ public class HabitService {
     @Transactional(readOnly = true)
     public HabitResponse getHabitById(Long habitId, Long userId) {
         Habit habit = habitRepository.findByIdAndUserId(habitId, userId)
-                .orElseThrow(() -> new HabitNotFoundException(habitId));
+                .orElseThrow(() -> new HabitNotFoundException());
         return HabitResponse.fromEntity(habit);
     }
 
@@ -67,7 +67,7 @@ public class HabitService {
     @Transactional
     public HabitResponse updateHabit(Long habitId, UpdateHabitRequest request, Long userId) {
         Habit habit = habitRepository.findByIdAndUserId(habitId, userId)
-                .orElseThrow(() -> new HabitNotFoundException(habitId));
+                .orElseThrow(() -> new HabitNotFoundException());
         habit.setName(request.name());
         habit.setDescription(request.description());
         habit.setColor(request.color());
@@ -77,14 +77,14 @@ public class HabitService {
     @Transactional
     public void deleteHabit(Long habitId, Long userId) {
         Habit habit = habitRepository.findByIdAndUserId(habitId, userId)
-                .orElseThrow(() -> new HabitNotFoundException(habitId));
+                .orElseThrow(() -> new HabitNotFoundException());
         habitRepository.delete(habit);
     }
 
     @Transactional
     public HabitResponse archiveHabit(Long habitId, Long userId) {
         Habit habit = habitRepository.findByIdAndUserId(habitId, userId)
-                .orElseThrow(() -> new HabitNotFoundException(habitId));
+                .orElseThrow(() -> new HabitNotFoundException());
         habit.setArchived(true);
         habit.setArchivedAt(LocalDateTime.now());
         return HabitResponse.fromEntity(habitRepository.save(habit));
@@ -94,7 +94,7 @@ public class HabitService {
     public void reorderHabits(ReorderHabitsRequest request, Long userId) {
         for (ReorderHabitsRequest.HabitOrderItem item : request.habitOrders()) {
             Habit habit = habitRepository.findByIdAndUserId(item.habitId(), userId)
-                    .orElseThrow(() -> new HabitNotFoundException(item.habitId()));
+                    .orElseThrow(() -> new HabitNotFoundException());
             habit.setDisplayOrder(item.displayOrder());
             habitRepository.save(habit);
         }
@@ -107,7 +107,7 @@ public class HabitService {
     @Transactional(readOnly = true)
     public HabitStatsResponse getHabitStats(Long habitId, Long userId) {
         Habit habit = habitRepository.findByIdAndUserId(habitId, userId)
-                .orElseThrow(() -> new HabitNotFoundException(habitId));
+                .orElseThrow(() -> new HabitNotFoundException());
 
         List<DailyLog> allLogs = dailyLogRepository.findByHabitIdOrderByLogDateDesc(habitId);
 
@@ -122,12 +122,12 @@ public class HabitService {
     @Transactional(readOnly = true)
     public HeatmapResponse getHeatmap(Long habitId, Long userId, LocalDate startDate, LocalDate endDate) {
         habitRepository.findByIdAndUserId(habitId, userId)
-                .orElseThrow(() -> new HabitNotFoundException(habitId));
+                .orElseThrow(() -> new HabitNotFoundException());
 
         if (startDate.isAfter(endDate)) {
             throw new InvalidDateRangeException("Start date must be before or equal to end date");
         }
-        if (ChronoUnit.DAYS.between(startDate, endDate) > 366) {
+        if (ChronoUnit.DAYS.between(startDate, endDate) > 365) {
             throw new InvalidDateRangeException("Date range cannot exceed 366 days");
         }
 

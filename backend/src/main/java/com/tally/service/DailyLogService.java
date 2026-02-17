@@ -33,12 +33,12 @@ public class DailyLogService {
     public List<DailyLogResponse> getLogsByDateRange(
             Long habitId, LocalDate startDate, LocalDate endDate, Long userId) {
         if (!habitRepository.existsByIdAndUserId(habitId, userId)) {
-            throw new HabitNotFoundException(habitId);
+            throw new HabitNotFoundException();
         }
         if (startDate.isAfter(endDate)) {
             throw new InvalidDateRangeException("Start date must be before or equal to end date");
         }
-        if (java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) > 366) {
+        if (java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) > 365) {
             throw new InvalidDateRangeException("Date range cannot exceed 366 days");
         }
         return dailyLogRepository
@@ -51,7 +51,7 @@ public class DailyLogService {
     @Transactional(readOnly = true)
     public DailyLogResponse getLogById(Long logId, Long userId) {
         DailyLog log = dailyLogRepository.findByIdAndHabitUserId(logId, userId)
-                .orElseThrow(() -> new DailyLogNotFoundException(logId));
+                .orElseThrow(() -> new DailyLogNotFoundException());
         return DailyLogResponse.fromEntity(log);
     }
 
@@ -63,7 +63,7 @@ public class DailyLogService {
     @Transactional
     public DailyLogResponse createOrUpdateLog(CreateDailyLogRequest request, Long userId) {
         Habit habit = habitRepository.findByIdAndUserId(request.habitId(), userId)
-                .orElseThrow(() -> new HabitNotFoundException(request.habitId()));
+                .orElseThrow(() -> new HabitNotFoundException());
 
         Optional<DailyLog> existing =
                 dailyLogRepository.findByHabitIdAndLogDate(request.habitId(), request.logDate());
@@ -83,7 +83,7 @@ public class DailyLogService {
     @Transactional
     public void deleteLog(Long logId, Long userId) {
         DailyLog log = dailyLogRepository.findByIdAndHabitUserId(logId, userId)
-                .orElseThrow(() -> new DailyLogNotFoundException(logId));
+                .orElseThrow(() -> new DailyLogNotFoundException());
         dailyLogRepository.delete(log);
     }
 

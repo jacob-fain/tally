@@ -102,7 +102,10 @@ public class HabitController {
         LocalDate start;
         LocalDate end;
 
-        if (startDate != null && endDate != null) {
+        if (startDate != null || endDate != null) {
+            if (startDate == null || endDate == null) {
+                throw new InvalidDateRangeException("Both startDate and endDate must be provided together");
+            }
             start = startDate;
             end = endDate;
         } else if (year != null) {

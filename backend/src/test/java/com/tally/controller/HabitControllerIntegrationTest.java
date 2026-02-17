@@ -1,7 +1,6 @@
 package com.tally.controller;
 
 import com.tally.dto.request.CreateHabitRequest;
-import com.tally.dto.request.LoginRequest;
 import com.tally.dto.request.RegisterRequest;
 import com.tally.dto.request.ReorderHabitsRequest;
 import com.tally.dto.request.UpdateHabitRequest;

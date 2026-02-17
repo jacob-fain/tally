@@ -1,7 +1,7 @@
 package com.tally.exception;
 
 public class HabitNotFoundException extends RuntimeException {
-    public HabitNotFoundException(Long habitId) {
+    public HabitNotFoundException() {
         super("Habit not found");
     }
 }
