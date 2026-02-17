@@ -1,0 +1,44 @@
+name: CI
+
+# Trigger CI on:
+# - Every push to main (after merge)
+# - Every PR targeting main
+# - Every push to feature branches (catch bugs early)
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          # Cache Maven dependencies between runs.
+          # Without caching, Maven re-downloads ~100MB of dependencies every run.
+          cache: maven
+
+      - name: Run tests
+        working-directory: ./backend
+        run: ./mvnw test -B
+        # -B = batch mode (no progress bars, cleaner CI output)
+
+      - name: Upload test results
+        # Always upload test results, even if tests fail.
+        # This lets you see exactly which tests failed in the Actions UI.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: backend/target/surefire-reports/
+          retention-days: 7
