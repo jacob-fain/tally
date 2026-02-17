@@ -15,7 +15,7 @@ import java.time.Duration;
  * Low-level HTTP client wrapping Java's built-in java.net.http.HttpClient.
  *
  * Why java.net.http.HttpClient instead of OkHttp?
- * - It's built into Java 11+ — zero extra dependencies
+ * - It's built into Java 17+ — zero extra dependencies
  * - Supports async (CompletableFuture) which we use in controllers
  * - Perfectly capable for our use case (simple REST calls)
  * - OkHttp shines for advanced caching, interceptors — overkill here
@@ -36,11 +36,13 @@ public class ApiClient {
     //   export TALLY_API_URL=http://localhost:9090
     private static final String DEFAULT_BASE_URL = "https://api.usetally.net";
 
-    private static ApiClient instance;
+    // Eager initialization — thread-safe without synchronization overhead.
+    // The instance is created once when the class loads (on first use).
+    private static final ApiClient instance = new ApiClient();
 
     private final String baseUrl;
     private final HttpClient httpClient;
-    final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     private ApiClient() {
         this.baseUrl = System.getenv().getOrDefault("TALLY_API_URL", DEFAULT_BASE_URL);
@@ -55,9 +57,6 @@ public class ApiClient {
     }
 
     public static ApiClient getInstance() {
-        if (instance == null) {
-            instance = new ApiClient();
-        }
         return instance;
     }
 
@@ -174,7 +173,14 @@ public class ApiClient {
         } catch (IOException e) {
             ApiError fallback = new ApiError();
             fallback.setStatus(response.statusCode());
-            fallback.setMessage("HTTP " + response.statusCode() + ": " + response.body());
+            // Truncate body to avoid exposing large HTML error pages or sensitive content
+            String body = response.body();
+            if (body == null || body.isBlank()) {
+                fallback.setMessage("HTTP " + response.statusCode());
+            } else {
+                String truncated = body.length() > 200 ? body.substring(0, 200) + "..." : body;
+                fallback.setMessage("HTTP " + response.statusCode() + ": " + truncated);
+            }
             return fallback;
         }
     }

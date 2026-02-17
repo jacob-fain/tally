@@ -58,6 +58,7 @@ public class TallyApp extends Application {
         Scene scene = loadScene("/com/tally/login.fxml", 400, 500);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Tally — Sign In");
+        primaryStage.setResizable(false);
     }
 
     /**
@@ -68,6 +69,7 @@ public class TallyApp extends Application {
         Scene scene = loadScene("/com/tally/register.fxml", 400, 560);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Tally — Create Account");
+        primaryStage.setResizable(false);
     }
 
     /**

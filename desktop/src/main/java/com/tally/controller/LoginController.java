@@ -96,9 +96,8 @@ public class LoginController {
 
         loginTask.setOnFailed(event -> {
             setLoading(false);
-            Throwable ex = loginTask.getException();
-            showError("Connection error: " + ex.getMessage() +
-                    "\nCheck your internet connection and try again.");
+            System.err.println("Login error: " + loginTask.getException().getMessage());
+            showError("Connection error. Please check your internet connection and try again.");
         });
 
         // Run on a daemon thread (won't prevent app shutdown)

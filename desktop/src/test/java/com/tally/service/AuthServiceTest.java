@@ -54,14 +54,11 @@ class AuthServiceTest {
     // =========================================================================
 
     @Test
-    void shouldNotBeAuthenticatedWithNoStoredTokens() {
-        // If ~/.tally/auth.dat doesn't exist, isAuthenticated() returns false
-        // (This assumes no real token file exists on the test machine — true in CI)
+    void isAuthenticatedShouldNotThrow() {
+        // isAuthenticated() may return true or false depending on whether a token file
+        // exists on the test machine. We just verify it doesn't throw.
         AuthService service = AuthService.getInstance();
-        // We can't guarantee the token file doesn't exist on a dev machine,
-        // but we can at least verify the return type is boolean
-        boolean result = service.isAuthenticated();
-        assertNotNull(result); // trivially true — just verifies no exception
+        assertDoesNotThrow(service::isAuthenticated);
     }
 
     @Test

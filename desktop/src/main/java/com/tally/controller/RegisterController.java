@@ -68,9 +68,8 @@ public class RegisterController {
 
         registerTask.setOnFailed(event -> {
             setLoading(false);
-            Throwable ex = registerTask.getException();
-            showError("Connection error: " + ex.getMessage() +
-                    "\nCheck your internet connection and try again.");
+            System.err.println("Register error: " + registerTask.getException().getMessage());
+            showError("Connection error. Please check your internet connection and try again.");
         });
 
         Thread thread = new Thread(registerTask);
@@ -98,7 +97,8 @@ public class RegisterController {
         if (!username.matches("[a-zA-Z0-9_]+")) return "Username can only contain letters, numbers, and underscores.";
 
         if (email.isBlank()) return "Email is required.";
-        if (!email.contains("@") || !email.contains(".")) return "Please enter a valid email address.";
+        // Matches: localpart@domain.tld — same pattern the backend's @Email annotation validates
+        if (!email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) return "Please enter a valid email address.";
 
         if (password.isBlank()) return "Password is required.";
         if (password.length() < 8) return "Password must be at least 8 characters.";

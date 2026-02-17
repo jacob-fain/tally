@@ -42,7 +42,7 @@ import java.util.Set;
  */
 public class AuthService {
 
-    private static AuthService instance;
+    private static volatile AuthService instance;
 
     private final ApiClient apiClient;
     private final Path tokenFilePath;
@@ -61,7 +61,11 @@ public class AuthService {
 
     public static AuthService getInstance() {
         if (instance == null) {
-            instance = new AuthService();
+            synchronized (AuthService.class) {
+                if (instance == null) {
+                    instance = new AuthService();
+                }
+            }
         }
         return instance;
     }
