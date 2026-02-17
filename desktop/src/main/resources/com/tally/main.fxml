@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+  Main window placeholder — fully implemented in Phase 6 (Heatmap View).
+  For now this just confirms that login → main navigation works.
+-->
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.tally.controller.MainController"
+            styleClass="root-container"
+            stylesheets="@css/app.css"
+            prefWidth="960"
+            prefHeight="600">
+
+    <!-- Top toolbar -->
+    <top>
+        <HBox styleClass="toolbar" spacing="8" alignment="CENTER_RIGHT">
+            <Label fx:id="usernameLabel" styleClass="toolbar-username" HBox.hgrow="ALWAYS"/>
+            <Button text="Logout" onAction="#onLogoutClicked" styleClass="logout-button"/>
+        </HBox>
+    </top>
+
+    <!-- Center — habit heatmap (Phase 6) -->
+    <center>
+        <VBox alignment="CENTER" spacing="16" styleClass="placeholder-area">
+            <Label text="Your habits will appear here" styleClass="placeholder-text"/>
+            <Label text="Phase 6: Heatmap View coming next" styleClass="placeholder-subtext"/>
+        </VBox>
+    </center>
+</BorderPane>

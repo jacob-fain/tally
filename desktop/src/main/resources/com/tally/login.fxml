@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<!--
+  Login screen layout.
+
+  Why FXML instead of programmatic UI?
+  FXML separates the "what it looks like" (XML) from "what it does" (Java controller).
+  This mirrors the MVC pattern: View (FXML) + Controller (Java).
+  Tools like Scene Builder can visually edit FXML, and it's easier to read/maintain
+  than 100 lines of new Button(), setLayoutX(), etc.
+
+  The fx:controller attribute links this FXML to its Java controller.
+  FXMLLoader instantiates the controller and injects @FXML-annotated fields.
+-->
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.tally.controller.LoginController"
+      styleClass="root-container"
+      stylesheets="@css/app.css"
+      spacing="0"
+      prefWidth="400"
+      prefHeight="500">
+
+    <!-- App title / branding -->
+    <VBox styleClass="header-section" alignment="CENTER">
+        <Label text="Tally" styleClass="app-title"/>
+        <Label text="Track your habits" styleClass="app-subtitle"/>
+    </VBox>
+
+    <!-- Form card -->
+    <VBox styleClass="form-card" VBox.vgrow="ALWAYS">
+        <Label text="Sign In" styleClass="form-title"/>
+
+        <!-- Error label (hidden until there's an error) -->
+        <Label fx:id="errorLabel" styleClass="error-label" wrapText="true" managed="false" visible="false"/>
+
+        <Label text="Username or Email" styleClass="field-label"/>
+        <TextField fx:id="usernameField"
+                   promptText="Enter username or email"
+                   styleClass="text-field"/>
+
+        <Label text="Password" styleClass="field-label"/>
+        <PasswordField fx:id="passwordField"
+                       promptText="Enter password"
+                       styleClass="text-field"/>
+
+        <Button fx:id="loginButton"
+                text="Sign In"
+                onAction="#onLoginClicked"
+                styleClass="primary-button"
+                defaultButton="true"
+                maxWidth="Infinity"/>
+
+        <Separator styleClass="divider"/>
+
+        <HBox alignment="CENTER" spacing="4">
+            <Label text="Don't have an account?" styleClass="secondary-text"/>
+            <Hyperlink text="Create one" onAction="#onCreateAccountClicked" styleClass="link"/>
+        </HBox>
+    </VBox>
+</VBox>
