@@ -1,0 +1,76 @@
+name: CD
+
+# Only deploy when code is merged to main.
+# This ensures only reviewed, tested code reaches production.
+on:
+  push:
+    branches: [main]
+
+# Only allow one deployment at a time.
+# If a new merge happens while deploying, cancel the in-progress deployment.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+
+    # Grant permission to push Docker images to GitHub Container Registry (GHCR)
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        # Note: No separate Maven build step here. The Dockerfile's builder stage
+        # runs ./mvnw package itself, so building Maven separately would be
+        # redundant work. Docker layer caching handles dependency caching.
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          # GITHUB_TOKEN is automatically available in all GitHub Actions workflows.
+          # No manual secret setup needed for pushing to GHCR.
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/tally-backend:latest
+            ghcr.io/${{ github.repository_owner }}/tally-backend:${{ github.sha }}
+          # Tag with both "latest" and the exact commit SHA.
+          # "latest" is what your hosting platform pulls by default.
+          # The SHA tag lets you roll back to any specific commit.
+
+      # ----------------------------------------------------------------
+      # DEPLOYMENT STEP - Configure for your hosting platform
+      # ----------------------------------------------------------------
+      #
+      # Option A: Railway (recommended for simplicity)
+      #   Railway can auto-deploy directly from GitHub without this step.
+      #   1. Go to Railway → New Project → Deploy from GitHub Repo
+      #   2. Select this repo and main branch
+      #   3. Railway will auto-deploy on every push to main
+      #   4. Set env vars in Railway dashboard (DATABASE_URL, JWT_SECRET, etc.)
+      #
+      # Option B: Render
+      #   Same as Railway - connect GitHub repo, Render auto-deploys.
+      #   Or use their deploy hook URL with the step below.
+      #
+      # Option C: Fly.io
+      #   Uncomment the flyctl step below and add FLY_API_TOKEN secret.
+      #
+      # - name: Deploy to Fly.io
+      #   uses: superfly/flyctl-actions@master
+      #   with:
+      #     args: "deploy --remote-only"
+      #   env:
+      #     FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
