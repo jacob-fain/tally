@@ -223,12 +223,12 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void getCurrentUser_NoToken_Returns403() {
+    void getCurrentUser_NoToken_Returns401() {
         ResponseEntity<Map> response = restTemplate.getForEntity(
                 "/api/auth/me",
                 Map.class
         );
 
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 }
