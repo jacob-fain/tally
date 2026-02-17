@@ -1,12 +1,11 @@
 name: CI
 
 # Trigger CI on:
-# - Every push to main (after merge)
-# - Every PR targeting main
-# - Every push to feature branches (catch bugs early)
+# - Every PR targeting main (catches issues before merge, regardless of branch name)
+# - Every push to main (verifies the merge itself)
 on:
   push:
-    branches: [main, "feature/**"]
+    branches: [main]
   pull_request:
     branches: [main]
 
