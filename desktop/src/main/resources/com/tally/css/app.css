@@ -1,0 +1,175 @@
+/* ============================================================
+   Tally Desktop — Application Stylesheet
+   JavaFX uses CSS to style components, similar to web CSS
+   but with -fx- prefixed properties for JavaFX-specific ones.
+   ============================================================ */
+
+/* --- Root / Base ------------------------------------------- */
+.root {
+    -fx-background-color: #F8F9FA;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 14px;
+}
+
+.root-container {
+    -fx-background-color: #F8F9FA;
+}
+
+/* --- Header / Branding ------------------------------------- */
+.header-section {
+    -fx-background-color: #2D2D2D;
+    -fx-padding: 32 24 24 24;
+    -fx-spacing: 4;
+}
+
+.app-title {
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+.app-subtitle {
+    -fx-text-fill: #9E9E9E;
+    -fx-font-size: 13px;
+}
+
+/* --- Form Card --------------------------------------------- */
+.form-card {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 28 32 32 32;
+    -fx-spacing: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 2);
+}
+
+.form-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1A1A1A;
+    -fx-padding: 0 0 12 0;
+}
+
+/* --- Form Fields ------------------------------------------- */
+.field-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #555555;
+    -fx-padding: 8 0 2 0;
+}
+
+.text-field {
+    -fx-background-color: #F5F5F5;
+    -fx-border-color: #E0E0E0;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 10 12;
+    -fx-font-size: 14px;
+}
+
+.text-field:focused {
+    -fx-border-color: #4CAF50;
+    -fx-background-color: #FFFFFF;
+    -fx-effect: dropshadow(gaussian, rgba(76,175,80,0.2), 4, 0, 0, 0);
+}
+
+/* --- Buttons ----------------------------------------------- */
+.primary-button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 24;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: #43A047;
+}
+
+.primary-button:pressed {
+    -fx-background-color: #388E3C;
+}
+
+.primary-button:disabled {
+    -fx-background-color: #A5D6A7;
+    -fx-text-fill: #FFFFFF;
+}
+
+/* --- Links and secondary elements -------------------------- */
+.link {
+    -fx-text-fill: #4CAF50;
+    -fx-font-size: 13px;
+    -fx-underline: false;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+
+.link:hover {
+    -fx-text-fill: #2E7D32;
+    -fx-underline: true;
+}
+
+.secondary-text {
+    -fx-text-fill: #757575;
+    -fx-font-size: 13px;
+}
+
+.divider {
+    -fx-padding: 12 0;
+}
+
+/* --- Error / Status Labels --------------------------------- */
+.error-label {
+    -fx-background-color: #FFEBEE;
+    -fx-text-fill: #C62828;
+    -fx-padding: 10 12;
+    -fx-background-radius: 4px;
+    -fx-font-size: 13px;
+    -fx-border-color: #FFCDD2;
+    -fx-border-radius: 4px;
+    -fx-border-width: 1px;
+}
+
+/* --- Toolbar (main window) --------------------------------- */
+.toolbar {
+    -fx-background-color: #2D2D2D;
+    -fx-padding: 12 16;
+    -fx-spacing: 12;
+}
+
+.toolbar-username {
+    -fx-text-fill: #9E9E9E;
+    -fx-font-size: 13px;
+}
+
+.logout-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #9E9E9E;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-border-color: #555555;
+    -fx-border-radius: 4px;
+    -fx-padding: 4 12;
+}
+
+.logout-button:hover {
+    -fx-background-color: #3A3A3A;
+    -fx-text-fill: #FFFFFF;
+}
+
+/* --- Main window placeholder ------------------------------- */
+.placeholder-area {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 40;
+}
+
+.placeholder-text {
+    -fx-font-size: 18px;
+    -fx-text-fill: #757575;
+}
+
+.placeholder-subtext {
+    -fx-font-size: 13px;
+    -fx-text-fill: #BDBDBD;
+}
