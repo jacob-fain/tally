@@ -6,6 +6,7 @@ import com.tally.model.Habit;
 import com.tally.service.AuthService;
 import com.tally.service.HabitService;
 import com.tally.service.LogService;
+import com.tally.service.ThemeManager;
 import com.tally.ui.HabitRow;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -41,10 +42,12 @@ public class MainController {
     @FXML private VBox emptyPane;
     @FXML private TextField newHabitNameField;
     @FXML private Button addHabitBtn;
+    @FXML private Button themeToggleBtn;
 
     private final AuthService authService = AuthService.getInstance();
     private final HabitService habitService = HabitService.getInstance();
     private final LogService logService = LogService.getInstance();
+    private final ThemeManager themeManager = ThemeManager.getInstance();
 
     private static final int MIN_YEAR = 2020; // Reasonable minimum - adjust if needed
     private int currentYear = LocalDate.now().getYear();
@@ -62,6 +65,10 @@ public class MainController {
 
         // Allow pressing Enter in the new habit field to add a habit
         newHabitNameField.setOnAction(event -> onAddHabitClicked());
+
+        // Apply current theme and update button text
+        themeManager.applyTheme(yearLabel.getScene());
+        updateThemeToggleButton();
 
         System.out.println("About to call loadHabits()");
         loadHabits();
@@ -250,6 +257,22 @@ public class MainController {
         Thread thread = new Thread(task);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    // -------------------------------------------------------------------------
+    // Theme toggle
+    // -------------------------------------------------------------------------
+
+    @FXML
+    private void onThemeToggleClicked() {
+        themeManager.toggleTheme(themeToggleBtn.getScene());
+        updateThemeToggleButton();
+    }
+
+    private void updateThemeToggleButton() {
+        if (themeToggleBtn != null) {
+            themeToggleBtn.setText(themeManager.isDarkMode() ? "☀" : "🌙");
+        }
     }
 
     // -------------------------------------------------------------------------

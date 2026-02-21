@@ -140,7 +140,7 @@ public class HeatmapGrid extends VBox {
 
             if (month != lastLabeledMonth) {
                 Label lbl = new Label(month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH));
-                lbl.setStyle("-fx-font-size: 9px; -fx-text-fill: #767676;");
+                lbl.getStyleClass().add("heatmap-label");
                 lbl.setMinWidth((CELL_SIZE + CELL_GAP));
                 lbl.setPrefWidth((CELL_SIZE + CELL_GAP));
                 row.getChildren().add(lbl);
@@ -166,7 +166,7 @@ public class HeatmapGrid extends VBox {
         String[] dayNames = {"M", "T", "W", "T", "F", "S", "S"};
         for (int i = 0; i < DAYS_IN_WEEK; i++) {
             Label lbl = new Label(dayNames[i]);
-            lbl.setStyle("-fx-font-size: 9px; -fx-text-fill: #767676;");
+            lbl.getStyleClass().add("heatmap-label");
             lbl.setMinHeight(CELL_SIZE);
             lbl.setPrefHeight(CELL_SIZE);
             labels.getChildren().add(lbl);

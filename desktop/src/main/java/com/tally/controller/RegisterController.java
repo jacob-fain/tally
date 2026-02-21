@@ -2,6 +2,7 @@ package com.tally.controller;
 
 import com.tally.TallyApp;
 import com.tally.service.AuthService;
+import com.tally.service.ThemeManager;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -22,10 +23,14 @@ public class RegisterController {
     @FXML private Label errorLabel;
 
     private final AuthService authService = AuthService.getInstance();
+    private final ThemeManager themeManager = ThemeManager.getInstance();
 
     @FXML
     private void initialize() {
         confirmPasswordField.setOnAction(event -> onRegisterClicked());
+
+        // Apply saved theme
+        themeManager.applyTheme(usernameField.getScene());
     }
 
     @FXML

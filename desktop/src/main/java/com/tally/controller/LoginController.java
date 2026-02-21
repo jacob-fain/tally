@@ -2,6 +2,7 @@ package com.tally.controller;
 
 import com.tally.TallyApp;
 import com.tally.service.AuthService;
+import com.tally.service.ThemeManager;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -33,6 +34,7 @@ public class LoginController {
     @FXML private Label errorLabel;
 
     private final AuthService authService = AuthService.getInstance();
+    private final ThemeManager themeManager = ThemeManager.getInstance();
 
     /**
      * Called by FXMLLoader after all @FXML fields are injected.
@@ -42,6 +44,9 @@ public class LoginController {
     private void initialize() {
         // Allow pressing Enter in the password field to trigger login
         passwordField.setOnAction(event -> onLoginClicked());
+
+        // Apply saved theme
+        themeManager.applyTheme(usernameField.getScene());
     }
 
     @FXML
