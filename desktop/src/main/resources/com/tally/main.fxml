@@ -31,10 +31,26 @@
         </HBox>
     </top>
 
-    <!-- Center: scrollable list of habit rows -->
+    <!-- Center: search bar + scrollable list of habit rows -->
     <center>
-        <ScrollPane fitToWidth="true" styleClass="habits-scroll" hbarPolicy="NEVER">
-            <VBox fx:id="habitsContainer" spacing="10" styleClass="habits-container">
+        <VBox>
+            <!-- Search bar -->
+            <HBox styleClass="search-bar" spacing="8" alignment="CENTER_LEFT">
+                <TextField fx:id="searchField"
+                           promptText="Search habits... (Ctrl+F)"
+                           styleClass="search-field"
+                           HBox.hgrow="ALWAYS"/>
+                <Button fx:id="clearSearchBtn"
+                        text="×"
+                        onAction="#onClearSearchClicked"
+                        styleClass="clear-search-btn"
+                        managed="false"
+                        visible="false"/>
+            </HBox>
+
+            <!-- Scrollable list of habit rows -->
+            <ScrollPane fitToWidth="true" styleClass="habits-scroll" hbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+                <VBox fx:id="habitsContainer" spacing="10" styleClass="habits-container">
 
                 <!-- Loading / empty state -->
                 <VBox fx:id="loadingPane" alignment="CENTER" styleClass="placeholder-area">
@@ -49,6 +65,7 @@
 
             </VBox>
         </ScrollPane>
+        </VBox>
     </center>
 
     <!-- Bottom: add habit bar -->

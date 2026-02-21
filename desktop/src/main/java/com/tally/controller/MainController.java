@@ -46,6 +46,8 @@ public class MainController {
     @FXML private TextField newHabitNameField;
     @FXML private Button addHabitBtn;
     @FXML private Button themeToggleBtn;
+    @FXML private TextField searchField;
+    @FXML private Button clearSearchBtn;
 
     private final AuthService authService = AuthService.getInstance();
     private final HabitService habitService = HabitService.getInstance();
@@ -69,6 +71,9 @@ public class MainController {
 
         // Allow pressing Enter in the new habit field to add a habit
         newHabitNameField.setOnAction(event -> onAddHabitClicked());
+
+        // Set up search filtering
+        setupSearchFilter();
 
         // Set up tooltips with keyboard shortcuts
         setupTooltips();
@@ -270,6 +275,79 @@ public class MainController {
     }
 
     // -------------------------------------------------------------------------
+    // Search/Filter
+    // -------------------------------------------------------------------------
+
+    /**
+     * Set up real-time search filtering for habits.
+     */
+    private void setupSearchFilter() {
+        searchField.textProperty().addListener((obs, oldValue, newValue) -> {
+            filterHabits(newValue);
+            // Show/hide clear button based on whether there's text
+            boolean hasText = newValue != null && !newValue.isBlank();
+            clearSearchBtn.setVisible(hasText);
+            clearSearchBtn.setManaged(hasText);
+        });
+
+        // Escape in search field clears it
+        searchField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                searchField.clear();
+                event.consume();
+            }
+        });
+    }
+
+    /**
+     * Filter visible habits based on search query.
+     * Shows/hides HabitRow components whose names match the query.
+     */
+    private void filterHabits(String query) {
+        if (query == null || query.isBlank()) {
+            // Show all habits
+            habitsContainer.getChildren().forEach(node -> {
+                if (node instanceof HabitRow) {
+                    node.setVisible(true);
+                    node.setManaged(true);
+                }
+            });
+            return;
+        }
+
+        String lowerQuery = query.toLowerCase().trim();
+
+        habitsContainer.getChildren().forEach(node -> {
+            if (node instanceof HabitRow row) {
+                // Check if habit name contains the query (case-insensitive)
+                String habitName = getHabitNameForRow(row);
+                boolean matches = habitName.toLowerCase().contains(lowerQuery);
+
+                row.setVisible(matches);
+                row.setManaged(matches);
+            }
+        });
+    }
+
+    /**
+     * Get the habit name for a HabitRow by searching through our habits list.
+     */
+    private String getHabitNameForRow(HabitRow row) {
+        Long habitId = row.getHabitId();
+        return habits.stream()
+                .filter(h -> h.getId().equals(habitId))
+                .findFirst()
+                .map(Habit::getName)
+                .orElse("");
+    }
+
+    @FXML
+    private void onClearSearchClicked() {
+        searchField.clear();
+        searchField.requestFocus();
+    }
+
+    // -------------------------------------------------------------------------
     // Keyboard shortcuts
     // -------------------------------------------------------------------------
 
@@ -283,6 +361,7 @@ public class MainController {
         Tooltip.install(nextYearBtn, new Tooltip("Next Year (Alt+→)"));
         Tooltip.install(themeToggleBtn, new Tooltip("Toggle Theme (" + modifierKey + "+T)"));
         Tooltip.install(addHabitBtn, new Tooltip("Add Habit (" + modifierKey + "+N to focus)"));
+        searchField.setTooltip(new Tooltip(modifierKey + "+F to focus, Esc to clear"));
 
         Tooltip exportTooltip = new Tooltip("Export Data (" + modifierKey + "+E)");
         // Find export button by searching for it in the scene
@@ -353,6 +432,14 @@ public class MainController {
         // Ctrl/Cmd+N: Focus new habit field
         if (isCtrlOrCmd && event.getCode() == KeyCode.N) {
             newHabitNameField.requestFocus();
+            event.consume();
+            return;
+        }
+
+        // Ctrl/Cmd+F: Focus search field
+        if (isCtrlOrCmd && event.getCode() == KeyCode.F) {
+            searchField.requestFocus();
+            searchField.selectAll();
             event.consume();
             return;
         }

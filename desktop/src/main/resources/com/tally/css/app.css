@@ -266,6 +266,41 @@
     -fx-pref-height: 20px;
 }
 
+/* --- Search bar -------------------------------------------- */
+.search-bar {
+    -fx-background-color: -fx-bg-secondary;
+    -fx-padding: 12 16;
+    -fx-border-color: transparent transparent -fx-border-primary transparent;
+    -fx-border-width: 1px;
+}
+
+.search-field {
+    -fx-background-color: -fx-bg-tertiary;
+    -fx-border-color: -fx-border-primary;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 8 12;
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-primary;
+}
+
+.search-field:focused {
+    -fx-border-color: -fx-accent;
+    -fx-background-color: -fx-bg-secondary;
+}
+
+.clear-search-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-tertiary;
+    -fx-font-size: 18px;
+    -fx-cursor: hand;
+    -fx-padding: 4 8;
+}
+
+.clear-search-btn:hover {
+    -fx-text-fill: -fx-text-primary;
+}
+
 /* --- Habits scroll + container ----------------------------- */
 .habits-scroll {
     -fx-background-color: transparent;
