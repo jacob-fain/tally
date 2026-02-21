@@ -25,6 +25,7 @@
             <Separator orientation="VERTICAL" styleClass="toolbar-separator"/>
 
             <Label fx:id="usernameLabel" styleClass="toolbar-username"/>
+            <Button text="Export" onAction="#onExportClicked" styleClass="toolbar-button"/>
             <Button fx:id="themeToggleBtn" text="🌙" onAction="#onThemeToggleClicked" styleClass="toolbar-button"/>
             <Button text="Logout" onAction="#onLogoutClicked" styleClass="logout-button"/>
         </HBox>
