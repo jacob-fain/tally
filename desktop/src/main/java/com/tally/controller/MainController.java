@@ -13,6 +13,8 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
@@ -68,9 +70,15 @@ public class MainController {
         // Allow pressing Enter in the new habit field to add a habit
         newHabitNameField.setOnAction(event -> onAddHabitClicked());
 
+        // Set up tooltips with keyboard shortcuts
+        setupTooltips();
+
         // Apply current theme and update button text
         themeManager.applyTheme(yearLabel.getScene());
         updateThemeToggleButton();
+
+        // Set up keyboard shortcuts
+        setupKeyboardShortcuts();
 
         System.out.println("About to call loadHabits()");
         loadHabits();
@@ -259,6 +267,101 @@ public class MainController {
         Thread thread = new Thread(task);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    // -------------------------------------------------------------------------
+    // Keyboard shortcuts
+    // -------------------------------------------------------------------------
+
+    /**
+     * Add tooltips to buttons showing keyboard shortcuts.
+     */
+    private void setupTooltips() {
+        String modifierKey = System.getProperty("os.name").toLowerCase().contains("mac") ? "Cmd" : "Ctrl";
+
+        Tooltip.install(prevYearBtn, new Tooltip("Previous Year (Alt+←)"));
+        Tooltip.install(nextYearBtn, new Tooltip("Next Year (Alt+→)"));
+        Tooltip.install(themeToggleBtn, new Tooltip("Toggle Theme (" + modifierKey + "+T)"));
+        Tooltip.install(addHabitBtn, new Tooltip("Add Habit (" + modifierKey + "+N to focus)"));
+
+        Tooltip exportTooltip = new Tooltip("Export Data (" + modifierKey + "+E)");
+        // Find export button by searching for it in the scene
+        Platform.runLater(() -> {
+            yearLabel.getScene().getRoot().lookupAll(".toolbar-button").forEach(node -> {
+                if (node instanceof Button btn && "Export".equals(btn.getText())) {
+                    Tooltip.install(btn, exportTooltip);
+                }
+            });
+        });
+
+        newHabitNameField.setTooltip(new Tooltip(modifierKey + "+N to focus, Esc to clear"));
+    }
+
+    /**
+     * Set up global keyboard shortcuts for the main window.
+     *
+     * Shortcuts:
+     * - Alt+Left/Right: Navigate years
+     * - Ctrl/Cmd+E: Export data
+     * - Ctrl/Cmd+T: Toggle theme
+     * - Ctrl/Cmd+N: Focus new habit field
+     * - Escape: Clear new habit field
+     */
+    private void setupKeyboardShortcuts() {
+        yearLabel.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                newScene.setOnKeyPressed(this::handleKeyPress);
+            }
+        });
+    }
+
+    private void handleKeyPress(KeyEvent event) {
+        boolean isCtrlOrCmd = event.isShortcutDown(); // Ctrl on Windows/Linux, Cmd on Mac
+
+        // Alt+Left: Previous year
+        if (event.isAltDown() && event.getCode() == KeyCode.LEFT) {
+            if (!prevYearBtn.isDisabled()) {
+                onPrevYear();
+            }
+            event.consume();
+            return;
+        }
+
+        // Alt+Right: Next year
+        if (event.isAltDown() && event.getCode() == KeyCode.RIGHT) {
+            if (!nextYearBtn.isDisabled()) {
+                onNextYear();
+            }
+            event.consume();
+            return;
+        }
+
+        // Ctrl/Cmd+E: Export
+        if (isCtrlOrCmd && event.getCode() == KeyCode.E) {
+            onExportClicked();
+            event.consume();
+            return;
+        }
+
+        // Ctrl/Cmd+T: Toggle theme
+        if (isCtrlOrCmd && event.getCode() == KeyCode.T) {
+            onThemeToggleClicked();
+            event.consume();
+            return;
+        }
+
+        // Ctrl/Cmd+N: Focus new habit field
+        if (isCtrlOrCmd && event.getCode() == KeyCode.N) {
+            newHabitNameField.requestFocus();
+            event.consume();
+            return;
+        }
+
+        // Escape: Clear new habit field (if focused)
+        if (event.getCode() == KeyCode.ESCAPE && newHabitNameField.isFocused()) {
+            newHabitNameField.clear();
+            event.consume();
+        }
     }
 
     // -------------------------------------------------------------------------
