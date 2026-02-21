@@ -97,7 +97,7 @@ public class HeatmapGrid extends VBox {
         getChildren().clear();
 
         logsByDate = logs.stream()
-                .collect(Collectors.toMap(DailyLog::getLogDate, l -> l));
+                .collect(Collectors.toMap(DailyLog::getLogDate, l -> l, (existing, replacement) -> replacement));
 
         // The grid starts on the Monday of the week containing Jan 1
         LocalDate yearStart = LocalDate.of(year, 1, 1);

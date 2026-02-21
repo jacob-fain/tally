@@ -39,15 +39,16 @@ class HabitStatsTest {
         return streak;
     }
 
-    /** Completion % for the given year up to today. */
+    /** Completion % for the given year up to today (or year-end for past years). */
     static double calculateCompletionPct(List<DailyLog> logs, int year) {
         LocalDate yearStart = LocalDate.of(year, 1, 1);
-        LocalDate today = LocalDate.now();
+        LocalDate today = year < LocalDate.now().getYear() ? LocalDate.of(year, 12, 31) : LocalDate.now();
         long daysSoFar = today.toEpochDay() - yearStart.toEpochDay() + 1;
         if (daysSoFar <= 0) return 0;
 
         long completed = logs.stream()
                 .filter(DailyLog::isCompleted)
+                .filter(l -> !l.getLogDate().isBefore(yearStart))
                 .filter(l -> !l.getLogDate().isAfter(today))
                 .count();
 

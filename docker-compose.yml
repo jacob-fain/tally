@@ -3,16 +3,16 @@ version: '3.8'
 services:
   # Local PostgreSQL database for development
   # Usage: docker-compose up -d
-  # Connect at: localhost:5432, user=tally, password=tally_dev_password, db=tally_dev
+  # Connect at: localhost:5434, user=postgres, password=postgres, db=tally_db
   postgres:
     image: postgres:16-alpine
     container_name: tally-postgres-dev
     environment:
-      POSTGRES_DB: tally_dev
-      POSTGRES_USER: tally
-      POSTGRES_PASSWORD: tally_dev_password
+      POSTGRES_DB: tally_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       # Persist data across container restarts
       - postgres_data:/var/lib/postgresql/data

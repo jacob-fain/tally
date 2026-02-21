@@ -46,6 +46,7 @@ public class MainController {
     private final HabitService habitService = HabitService.getInstance();
     private final LogService logService = LogService.getInstance();
 
+    private static final int MIN_YEAR = 2020; // Reasonable minimum - adjust if needed
     private int currentYear = LocalDate.now().getYear();
     private List<Habit> habits = new ArrayList<>();
 
@@ -58,6 +59,9 @@ public class MainController {
         yearLabel.setText(String.valueOf(currentYear));
         // Can't navigate to future years
         nextYearBtn.setDisable(currentYear >= LocalDate.now().getYear());
+
+        // Allow pressing Enter in the new habit field to add a habit
+        newHabitNameField.setOnAction(event -> onAddHabitClicked());
 
         System.out.println("About to call loadHabits()");
         loadHabits();
@@ -153,10 +157,13 @@ public class MainController {
 
     @FXML
     private void onPrevYear() {
-        currentYear--;
-        yearLabel.setText(String.valueOf(currentYear));
-        nextYearBtn.setDisable(false);
-        loadLogsAndRender(habits);
+        if (currentYear > MIN_YEAR) {
+            currentYear--;
+            yearLabel.setText(String.valueOf(currentYear));
+            nextYearBtn.setDisable(false);
+            prevYearBtn.setDisable(currentYear <= MIN_YEAR);
+            loadLogsAndRender(habits);
+        }
     }
 
     @FXML

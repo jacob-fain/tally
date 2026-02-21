@@ -23,10 +23,10 @@ docker-compose ps
 docker-compose logs -f postgres
 ```
 
-This starts PostgreSQL on `localhost:5432` with:
-- Database: `tally_dev`
-- User: `tally`
-- Password: `tally_dev_password`
+This starts PostgreSQL on `localhost:5434` with:
+- Database: `tally_db`
+- User: `postgres`
+- Password: `postgres`
 
 ### 2. Run Backend
 
@@ -78,7 +78,7 @@ docker-compose down -v
 docker-compose up -d
 
 # Connect with psql
-docker exec -it tally-postgres-dev psql -U tally -d tally_dev
+docker exec -it tally-postgres-dev psql -U postgres -d tally_db
 ```
 
 ### Backend
@@ -140,13 +140,13 @@ You have another PostgreSQL running. Either stop it or change the port in `docke
 
 ```yaml
 ports:
-  - "5433:5432"  # Host:Container
+  - "5435:5432"  # Host:Container (changed from 5434)
 ```
 
 Then update `backend/src/main/resources/application-dev.properties`:
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5433/tally_dev
+spring.datasource.url=jdbc:postgresql://localhost:5435/tally_db
 ```
 
 ### "Connection refused" when desktop tries to reach backend
@@ -203,7 +203,7 @@ Set these on Railway/deployment platform:
 You can manually insert test data via psql:
 
 ```bash
-docker exec -it tally-postgres-dev psql -U tally -d tally_dev
+docker exec -it tally-postgres-dev psql -U postgres -d tally_db
 
 -- Create a test user (password is bcrypt-hashed "password123")
 INSERT INTO users (username, email, password_hash, created_at)
@@ -230,7 +230,7 @@ cd backend && ./mvnw spring-boot:run
 | Aspect | Local Dev | Production |
 |--------|-----------|------------|
 | Backend URL | http://localhost:8080 | https://api.usetally.net |
-| Database | Docker (localhost:5432) | Supabase (cloud) |
+| Database | Docker (localhost:5434) | Supabase (cloud) |
 | Profile | dev | prod |
 | Logging | Verbose | Minimal |
 | Swagger | Enabled | Disabled |
