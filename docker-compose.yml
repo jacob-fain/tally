@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  # Local PostgreSQL database for development
+  # Usage: docker-compose up -d
+  # Connect at: localhost:5432, user=tally, password=tally_dev_password, db=tally_dev
+  postgres:
+    image: postgres:16-alpine
+    container_name: tally-postgres-dev
+    environment:
+      POSTGRES_DB: tally_dev
+      POSTGRES_USER: tally
+      POSTGRES_PASSWORD: tally_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persist data across container restarts
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tally"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    # Named volume — data persists even if you stop/remove the container
+    # To wipe and start fresh: docker-compose down -v

@@ -414,7 +414,8 @@ GET    /api/sync/pull?since={timestamp}
 - **Stats inline:** Current streak and % shown per habit
 
 **Tasks:**
-1. Design main heatmap view layout (VBox with habit rows)
+1. Fix login to accept email OR username (update backend `LoginRequest` + `UserService.authenticateUser()`, update login.fxml placeholder text)
+2. Design main heatmap view layout (VBox with habit rows)
 2. Create Habit row component (checkbox + name + heatmap + stats)
 3. Implement 365-day heatmap grid component (custom JavaFX control)
 4. Fetch all habits + year of logs from API on load

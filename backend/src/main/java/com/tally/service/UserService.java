@@ -63,8 +63,14 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public AuthResponse authenticateUser(LoginRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new InvalidCredentialsException());
+        String usernameOrEmail = request.getUsernameOrEmail();
+
+        // Try username first, then fall back to email lookup.
+        // We use the same generic InvalidCredentialsException for both "not found"
+        // and "wrong password" to avoid leaking which accounts exist.
+        User user = userRepository.findByUsername(usernameOrEmail)
+                .or(() -> userRepository.findByEmail(usernameOrEmail))
+                .orElseThrow(InvalidCredentialsException::new);
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new InvalidCredentialsException();

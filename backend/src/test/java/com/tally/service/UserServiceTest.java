@@ -104,7 +104,7 @@ class UserServiceTest {
     }
 
     @Test
-    void authenticateUser_ValidCredentials_ReturnsAuthResponse() {
+    void authenticateUser_ValidUsername_ReturnsAuthResponse() {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches("password123", "$2a$10$hashedPassword")).thenReturn(true);
         when(jwtTokenProvider.generateAccessToken(any(CustomUserDetails.class))).thenReturn("access-token");
@@ -116,6 +116,22 @@ class UserServiceTest {
         assertNotNull(response);
         assertEquals("access-token", response.getAccessToken());
         assertEquals("refresh-token", response.getRefreshToken());
+        assertEquals("testuser", response.getUser().getUsername());
+    }
+
+    @Test
+    void authenticateUser_ValidEmail_ReturnsAuthResponse() {
+        LoginRequest emailRequest = new LoginRequest("test@example.com", "password123");
+        when(userRepository.findByUsername("test@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(existingUser));
+        when(passwordEncoder.matches("password123", "$2a$10$hashedPassword")).thenReturn(true);
+        when(jwtTokenProvider.generateAccessToken(any(CustomUserDetails.class))).thenReturn("access-token");
+        when(jwtTokenProvider.generateRefreshToken(any(CustomUserDetails.class))).thenReturn("refresh-token");
+        when(jwtTokenProvider.getAccessTokenExpiration()).thenReturn(900000L);
+
+        AuthResponse response = userService.authenticateUser(emailRequest);
+
+        assertNotNull(response);
         assertEquals("testuser", response.getUser().getUsername());
     }
 
@@ -134,6 +150,7 @@ class UserServiceTest {
     @Test
     void authenticateUser_NonExistentUser_ThrowsInvalidCredentialsException() {
         when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("nonexistent")).thenReturn(Optional.empty());
 
         LoginRequest nonExistentRequest = new LoginRequest("nonexistent", "password123");
         assertThrows(InvalidCredentialsException.class,
