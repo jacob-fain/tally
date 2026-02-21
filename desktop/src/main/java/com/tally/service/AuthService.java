@@ -85,7 +85,7 @@ public class AuthService {
             throws IOException, InterruptedException {
 
         Map<String, String> body = new HashMap<>();
-        body.put("username", usernameOrEmail);
+        body.put("usernameOrEmail", usernameOrEmail);
         body.put("password", password);
 
         HttpResponse<String> response = apiClient.post("/api/auth/login", body, null);

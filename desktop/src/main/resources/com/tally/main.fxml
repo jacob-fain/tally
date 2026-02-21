@@ -3,10 +3,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<!--
-  Main window placeholder — fully implemented in Phase 6 (Heatmap View).
-  For now this just confirms that login → main navigation works.
--->
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.tally.controller.MainController"
@@ -17,17 +13,53 @@
 
     <!-- Top toolbar -->
     <top>
-        <HBox styleClass="toolbar" spacing="8" alignment="CENTER_RIGHT">
-            <Label fx:id="usernameLabel" styleClass="toolbar-username" HBox.hgrow="ALWAYS"/>
+        <HBox styleClass="toolbar" spacing="12" alignment="CENTER_LEFT">
+            <Label text="Tally" styleClass="app-title-small"/>
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- Year navigation -->
+            <Button fx:id="prevYearBtn" text="‹" onAction="#onPrevYear" styleClass="year-nav-btn"/>
+            <Label fx:id="yearLabel" styleClass="year-label"/>
+            <Button fx:id="nextYearBtn" text="›" onAction="#onNextYear" styleClass="year-nav-btn"/>
+
+            <Separator orientation="VERTICAL" styleClass="toolbar-separator"/>
+
+            <Label fx:id="usernameLabel" styleClass="toolbar-username"/>
             <Button text="Logout" onAction="#onLogoutClicked" styleClass="logout-button"/>
         </HBox>
     </top>
 
-    <!-- Center — habit heatmap (Phase 6) -->
+    <!-- Center: scrollable list of habit rows -->
     <center>
-        <VBox alignment="CENTER" spacing="16" styleClass="placeholder-area">
-            <Label text="Your habits will appear here" styleClass="placeholder-text"/>
-            <Label text="Phase 6: Heatmap View coming next" styleClass="placeholder-subtext"/>
-        </VBox>
+        <ScrollPane fitToWidth="true" styleClass="habits-scroll" hbarPolicy="NEVER">
+            <VBox fx:id="habitsContainer" spacing="10" styleClass="habits-container">
+
+                <!-- Loading / empty state -->
+                <VBox fx:id="loadingPane" alignment="CENTER" styleClass="placeholder-area">
+                    <Label text="Loading habits..." styleClass="placeholder-text"/>
+                </VBox>
+
+                <VBox fx:id="emptyPane" alignment="CENTER" spacing="8"
+                      styleClass="placeholder-area" visible="false" managed="false">
+                    <Label text="No habits yet" styleClass="placeholder-text"/>
+                    <Label text="Add one below to get started" styleClass="placeholder-subtext"/>
+                </VBox>
+
+            </VBox>
+        </ScrollPane>
     </center>
+
+    <!-- Bottom: add habit bar -->
+    <bottom>
+        <HBox styleClass="add-habit-bar" spacing="8" alignment="CENTER_LEFT">
+            <TextField fx:id="newHabitNameField"
+                       promptText="New habit name..."
+                       styleClass="add-habit-field"
+                       HBox.hgrow="ALWAYS"/>
+            <Button fx:id="addHabitBtn"
+                    text="+ Add Habit"
+                    onAction="#onAddHabitClicked"
+                    styleClass="primary-button"/>
+        </HBox>
+    </bottom>
 </BorderPane>

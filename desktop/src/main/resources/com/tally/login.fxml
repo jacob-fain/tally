@@ -41,7 +41,7 @@
 
         <Label text="Username or Email" styleClass="field-label"/>
         <TextField fx:id="usernameField"
-                   promptText="Enter username or email"
+                   promptText="Username or email address"
                    styleClass="text-field"/>
 
         <Label text="Password" styleClass="field-label"/>

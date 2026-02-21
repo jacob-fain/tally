@@ -110,7 +110,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    void login_ValidCredentials_Returns200AndTokens() {
+    void login_ValidUsername_Returns200AndTokens() {
         User user = new User("testuser", "test@example.com", passwordEncoder.encode("password123"));
         userRepository.save(user);
 
@@ -126,6 +126,24 @@ class AuthControllerIntegrationTest {
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().getAccessToken());
         assertNotNull(response.getBody().getRefreshToken());
+        assertEquals("testuser", response.getBody().getUser().getUsername());
+    }
+
+    @Test
+    void login_ValidEmail_Returns200AndTokens() {
+        User user = new User("testuser", "test@example.com", passwordEncoder.encode("password123"));
+        userRepository.save(user);
+
+        LoginRequest request = new LoginRequest("test@example.com", "password123");
+
+        ResponseEntity<AuthResponse> response = restTemplate.postForEntity(
+                "/api/auth/login",
+                request,
+                AuthResponse.class
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
         assertEquals("testuser", response.getBody().getUser().getUsername());
     }
 
