@@ -7,8 +7,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
@@ -49,11 +53,14 @@ public class HeatmapGrid extends VBox {
     private static final int CELL_GAP = 3;
     private static final int DAYS_IN_WEEK = 7;
 
-    // The habit color (used for completed cells). Falls back to green.
-    private final Color completedColor;
-    private static final Color INCOMPLETE_COLOR = Color.web("#EEEEEE");
-    private static final Color FUTURE_COLOR = Color.web("#F5F5F5");
+    // Color scheme
+    private static final Color COMPLETED_COLOR = Color.web("#4CAF50"); // Green for completed
+    private static final Color INCOMPLETE_COLOR = Color.web("#F44336"); // Red for incomplete (past days)
+    private static final Color FUTURE_COLOR = Color.web("#9E9E9E"); // Grey for future days
     private static final Color TODAY_BORDER_COLOR = Color.web("#333333");
+
+    // Keep this for backwards compatibility but we'll use the static colors above
+    private final Color completedColor;
 
     private final int year;
     private final Long habitId;
@@ -110,52 +117,137 @@ public class HeatmapGrid extends VBox {
         int totalWeeks = (int) Math.ceil(
                 (double) (yearEnd.toEpochDay() - gridStart.toEpochDay() + 1) / 7);
 
-        // Month labels row (top)
-        HBox monthLabels = buildMonthLabels(gridStart, totalWeeks);
+        // Month labels row (top) with dividers
+        HBox monthLabelsRow = buildMonthLabelsWithDividers(gridStart, totalWeeks, yearStart, yearEnd);
 
         // Main grid: day-of-week labels on left, cells on right
         HBox mainRow = new HBox(4);
         mainRow.setAlignment(Pos.TOP_LEFT);
 
         VBox dayLabels = buildDayLabels();
-        cellGrid = buildCellGrid(gridStart, totalWeeks, yearStart, yearEnd);
 
-        mainRow.getChildren().addAll(dayLabels, cellGrid);
-        getChildren().addAll(monthLabels, mainRow);
+        // Create a container for cells + divider lines overlaid
+        StackPane cellContainer = new StackPane();
+        cellContainer.setAlignment(Pos.TOP_LEFT);
+
+        cellGrid = buildCellGrid(gridStart, totalWeeks, yearStart, yearEnd);
+        Pane dividerLines = buildMonthDividerLines(gridStart, totalWeeks, yearStart, yearEnd);
+
+        cellContainer.getChildren().addAll(cellGrid, dividerLines);
+
+        mainRow.getChildren().addAll(dayLabels, cellContainer);
+        getChildren().addAll(monthLabelsRow, mainRow);
     }
 
-    private HBox buildMonthLabels(LocalDate gridStart, int totalWeeks) {
+    private HBox buildMonthLabelsWithDividers(LocalDate gridStart, int totalWeeks,
+                                              LocalDate yearStart, LocalDate yearEnd) {
         HBox row = new HBox();
-        row.setPadding(new Insets(0, 0, 2, 22)); // 22px left offset to align with cells
+        row.setPadding(new Insets(0, 0, 4, 22)); // 22px left offset to align with cells
+        row.setAlignment(Pos.BOTTOM_LEFT);
 
+        // Calculate which weeks belong to each month
+        Month currentMonth = null;
+        int monthStartWeek = 0;
         int weekIndex = 0;
-        LocalDate current = gridStart;
-        Month lastLabeledMonth = null;
 
-        // We build one label-or-spacer per week column
         while (weekIndex < totalWeeks) {
-            // Check if this week starts a new month
-            LocalDate weekMonday = gridStart.plusWeeks(weekIndex);
-            Month month = weekMonday.getMonth();
-
-            if (month != lastLabeledMonth) {
-                Label lbl = new Label(month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH));
-                lbl.getStyleClass().add("heatmap-label");
-                lbl.setMinWidth((CELL_SIZE + CELL_GAP));
-                lbl.setPrefWidth((CELL_SIZE + CELL_GAP));
-                row.getChildren().add(lbl);
-                lastLabeledMonth = month;
-            } else {
-                // Spacer
-                Label spacer = new Label();
-                spacer.setMinWidth(CELL_SIZE + CELL_GAP);
-                spacer.setPrefWidth(CELL_SIZE + CELL_GAP);
-                row.getChildren().add(spacer);
+            LocalDate weekStart = gridStart.plusWeeks(weekIndex);
+            // Find the first day in this week that's in the year
+            LocalDate firstDayInWeek = weekStart;
+            for (int d = 0; d < 7; d++) {
+                LocalDate day = weekStart.plusDays(d);
+                if (!day.isBefore(yearStart) && !day.isAfter(yearEnd)) {
+                    firstDayInWeek = day;
+                    break;
+                }
             }
+
+            Month month = firstDayInWeek.getMonth();
+
+            // If month changed, create a label for the previous month
+            if (currentMonth != null && month != currentMonth) {
+                int monthWeeks = weekIndex - monthStartWeek;
+                double labelWidth = monthWeeks * (CELL_SIZE + CELL_GAP);
+                Label monthLabel = new Label(currentMonth.getDisplayName(TextStyle.SHORT, Locale.ENGLISH));
+                monthLabel.getStyleClass().add("heatmap-label");
+                monthLabel.setMinWidth(labelWidth);
+                monthLabel.setPrefWidth(labelWidth);
+                monthLabel.setMaxWidth(labelWidth);
+                monthLabel.setAlignment(Pos.CENTER);
+                row.getChildren().add(monthLabel);
+
+                monthStartWeek = weekIndex;
+            }
+
+            if (currentMonth == null) {
+                currentMonth = month;
+            }
+            currentMonth = month;
             weekIndex++;
         }
 
+        // Add the last month label
+        if (currentMonth != null) {
+            int monthWeeks = totalWeeks - monthStartWeek;
+            double labelWidth = monthWeeks * (CELL_SIZE + CELL_GAP);
+            Label monthLabel = new Label(currentMonth.getDisplayName(TextStyle.SHORT, Locale.ENGLISH));
+            monthLabel.getStyleClass().add("heatmap-label");
+            monthLabel.setMinWidth(labelWidth);
+            monthLabel.setPrefWidth(labelWidth);
+            monthLabel.setMaxWidth(labelWidth);
+            monthLabel.setAlignment(Pos.CENTER);
+            row.getChildren().add(monthLabel);
+        }
+
         return row;
+    }
+
+    private Pane buildMonthDividerLines(LocalDate gridStart, int totalWeeks,
+                                        LocalDate yearStart, LocalDate yearEnd) {
+        Pane pane = new Pane();
+        pane.setMouseTransparent(true); // Don't interfere with cell clicks
+
+        Month currentMonth = null;
+        LocalDate today = LocalDate.now();
+
+        for (int week = 0; week < totalWeeks; week++) {
+            LocalDate weekStart = gridStart.plusWeeks(week);
+
+            // Find the first valid day in this week
+            Month weekMonth = null;
+            for (int d = 0; d < 7; d++) {
+                LocalDate day = weekStart.plusDays(d);
+                if (!day.isBefore(yearStart) && !day.isAfter(yearEnd)) {
+                    weekMonth = day.getMonth();
+                    break;
+                }
+            }
+
+            if (weekMonth == null) continue;
+
+            // If month changed, draw a divider line
+            if (currentMonth != null && weekMonth != currentMonth && week > 0) {
+                // Calculate the height of the divider (only through days in the previous month)
+                double lineHeight = 0;
+                for (int d = 0; d < 7; d++) {
+                    LocalDate day = gridStart.plusWeeks(week - 1).plusDays(d);
+                    if (!day.isBefore(yearStart) && !day.isAfter(yearEnd) &&
+                        day.getMonth() == currentMonth) {
+                        lineHeight = (d + 1) * (CELL_SIZE + CELL_GAP);
+                    }
+                }
+
+                double xPos = week * (CELL_SIZE + CELL_GAP) - CELL_GAP / 2.0;
+                Line line = new Line(xPos, 0, xPos, lineHeight);
+                line.setStroke(Color.web("#CCCCCC"));
+                line.setStrokeWidth(1);
+                pane.getChildren().add(line);
+            }
+
+            currentMonth = weekMonth;
+        }
+
+        return pane;
     }
 
     private VBox buildDayLabels() {
@@ -212,13 +304,15 @@ public class HeatmapGrid extends VBox {
         rect.setArcWidth(3);
         rect.setArcHeight(3);
 
+        Color fillColor;
         if (isFuture) {
-            rect.setFill(FUTURE_COLOR);
+            fillColor = FUTURE_COLOR; // Grey for future
         } else if (completed) {
-            rect.setFill(completedColor);
+            fillColor = COMPLETED_COLOR; // Green for completed
         } else {
-            rect.setFill(INCOMPLETE_COLOR);
+            fillColor = INCOMPLETE_COLOR; // Red for incomplete past days
         }
+        rect.setFill(fillColor);
 
         if (isToday) {
             rect.setStroke(TODAY_BORDER_COLOR);
@@ -236,14 +330,27 @@ public class HeatmapGrid extends VBox {
 
         // Click handler — future dates are not clickable
         if (!isFuture) {
-            rect.setStyle("-fx-cursor: hand;");
+            rect.setCursor(javafx.scene.Cursor.HAND);
+
+            // Add hover effect to make it clear the cell is clickable
+            rect.setOnMouseEntered(event -> {
+                rect.setOpacity(0.7);
+            });
+            rect.setOnMouseExited(event -> {
+                rect.setOpacity(1.0);
+            });
+
             rect.setOnMouseClicked(event -> {
-                boolean newState = !completed;
+                // Always check current fill color to determine new state (not the captured 'completed' variable)
+                boolean currentlyCompleted = rect.getFill().equals(COMPLETED_COLOR);
+                boolean newState = !currentlyCompleted;
                 onCellToggled.accept(date, newState);
 
                 // Optimistic UI update: flip color immediately before the API responds
-                rect.setFill(newState ? completedColor : INCOMPLETE_COLOR);
+                rect.setFill(newState ? COMPLETED_COLOR : INCOMPLETE_COLOR);
             });
+        } else {
+            rect.setCursor(javafx.scene.Cursor.DEFAULT);
         }
 
         return rect;

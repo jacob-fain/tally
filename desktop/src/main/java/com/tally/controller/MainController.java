@@ -7,7 +7,6 @@ import com.tally.service.AuthService;
 import com.tally.service.ExportService;
 import com.tally.service.HabitService;
 import com.tally.service.LogService;
-import com.tally.service.ThemeManager;
 import com.tally.ui.HabitRow;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -45,14 +44,12 @@ public class MainController {
     @FXML private VBox emptyPane;
     @FXML private TextField newHabitNameField;
     @FXML private Button addHabitBtn;
-    @FXML private Button themeToggleBtn;
     @FXML private TextField searchField;
     @FXML private Button clearSearchBtn;
 
     private final AuthService authService = AuthService.getInstance();
     private final HabitService habitService = HabitService.getInstance();
     private final LogService logService = LogService.getInstance();
-    private final ThemeManager themeManager = ThemeManager.getInstance();
     private final ExportService exportService = ExportService.getInstance();
 
     private static final int MIN_YEAR = 2020; // Reasonable minimum - adjust if needed
@@ -77,10 +74,6 @@ public class MainController {
 
         // Set up tooltips with keyboard shortcuts
         setupTooltips();
-
-        // Apply current theme and update button text
-        themeManager.applyTheme(yearLabel.getScene());
-        updateThemeToggleButton();
 
         // Set up keyboard shortcuts
         setupKeyboardShortcuts();
@@ -359,7 +352,6 @@ public class MainController {
 
         Tooltip.install(prevYearBtn, new Tooltip("Previous Year (Alt+←)"));
         Tooltip.install(nextYearBtn, new Tooltip("Next Year (Alt+→)"));
-        Tooltip.install(themeToggleBtn, new Tooltip("Toggle Theme (" + modifierKey + "+T)"));
         Tooltip.install(addHabitBtn, new Tooltip("Add Habit (" + modifierKey + "+N to focus)"));
         searchField.setTooltip(new Tooltip(modifierKey + "+F to focus, Esc to clear"));
 
@@ -418,13 +410,6 @@ public class MainController {
         // Ctrl/Cmd+E: Export
         if (isCtrlOrCmd && event.getCode() == KeyCode.E) {
             onExportClicked();
-            event.consume();
-            return;
-        }
-
-        // Ctrl/Cmd+T: Toggle theme
-        if (isCtrlOrCmd && event.getCode() == KeyCode.T) {
-            onThemeToggleClicked();
             event.consume();
             return;
         }
@@ -532,22 +517,6 @@ public class MainController {
         Thread thread = new Thread(exportTask);
         thread.setDaemon(true);
         thread.start();
-    }
-
-    // -------------------------------------------------------------------------
-    // Theme toggle
-    // -------------------------------------------------------------------------
-
-    @FXML
-    private void onThemeToggleClicked() {
-        themeManager.toggleTheme(themeToggleBtn.getScene());
-        updateThemeToggleButton();
-    }
-
-    private void updateThemeToggleButton() {
-        if (themeToggleBtn != null) {
-            themeToggleBtn.setText(themeManager.isDarkMode() ? "☀" : "🌙");
-        }
     }
 
     // -------------------------------------------------------------------------

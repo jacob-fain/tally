@@ -59,13 +59,13 @@ public class ThemeManager {
      * @param scene Scene to theme
      */
     public void applyTheme(Scene scene) {
-        if (scene == null || scene.getRoot() == null) return;
+        if (scene == null) return;
 
-        // Remove existing theme classes
-        scene.getRoot().getStyleClass().removeAll(LIGHT_THEME, DARK_THEME);
-
-        // Add current theme class
-        scene.getRoot().getStyleClass().add(currentTheme);
+        // Switch the entire stylesheet
+        scene.getStylesheets().clear();
+        String cssFile = isDarkMode() ? "/com/tally/css/app-dark.css" : "/com/tally/css/app-light.css";
+        String cssUrl = getClass().getResource(cssFile).toExternalForm();
+        scene.getStylesheets().add(cssUrl);
     }
 
     /**
