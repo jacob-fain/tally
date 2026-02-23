@@ -4,103 +4,48 @@
    but with -fx- prefixed properties for JavaFX-specific ones.
    ============================================================ */
 
-/* --- Theme Color Variables --------------------------------- */
-/* Light theme (default) */
-.root.light {
-    -fx-bg-primary: #F8F9FA;
-    -fx-bg-secondary: #FFFFFF;
-    -fx-bg-tertiary: #F5F5F5;
-    -fx-bg-header: #2D2D2D;
-    -fx-bg-hover: #3A3A3A;
-
-    -fx-text-primary: #1A1A1A;
-    -fx-text-secondary: #757575;
-    -fx-text-tertiary: #9E9E9E;
-    -fx-text-inverse: #FFFFFF;
-
-    -fx-border-primary: #E0E0E0;
-    -fx-border-secondary: #555555;
-
-    -fx-accent: #4CAF50;
-    -fx-accent-hover: #43A047;
-    -fx-accent-pressed: #388E3C;
-
-    -fx-error-bg: #FFEBEE;
-    -fx-error-border: #FFCDD2;
-    -fx-error-text: #C62828;
-
-    -fx-shadow: rgba(0,0,0,0.06);
-}
-
-/* Dark theme */
-.root.dark {
-    -fx-bg-primary: #1A1A1A;
-    -fx-bg-secondary: #2D2D2D;
-    -fx-bg-tertiary: #3A3A3A;
-    -fx-bg-header: #0D0D0D;
-    -fx-bg-hover: #4A4A4A;
-
-    -fx-text-primary: #E0E0E0;
-    -fx-text-secondary: #B0B0B0;
-    -fx-text-tertiary: #808080;
-    -fx-text-inverse: #FFFFFF;
-
-    -fx-border-primary: #3A3A3A;
-    -fx-border-secondary: #555555;
-
-    -fx-accent: #66BB6A;
-    -fx-accent-hover: #5CB860;
-    -fx-accent-pressed: #4CAF50;
-
-    -fx-error-bg: #3D1A1A;
-    -fx-error-border: #5A2828;
-    -fx-error-text: #EF9A9A;
-
-    -fx-shadow: rgba(0,0,0,0.3);
-}
-
 /* --- Root / Base ------------------------------------------- */
 .root {
-    -fx-background-color: -fx-bg-primary;
+    -fx-background-color: #F8F9FA;
     -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     -fx-font-size: 14px;
 }
 
 .root-container {
-    -fx-background-color: -fx-bg-primary;
+    -fx-background-color: #F8F9FA;
 }
 
 /* --- Header / Branding ------------------------------------- */
 .header-section {
-    -fx-background-color: -fx-bg-header;
+    -fx-background-color: #2D2D2D;
     -fx-padding: 32 24 24 24;
     -fx-spacing: 4;
 }
 
 .app-title {
-    -fx-text-fill: -fx-text-inverse;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 32px;
     -fx-font-weight: bold;
     -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
 .app-subtitle {
-    -fx-text-fill: -fx-text-tertiary;
+    -fx-text-fill: #9E9E9E;
     -fx-font-size: 13px;
 }
 
 /* --- Form Card --------------------------------------------- */
 .form-card {
-    -fx-background-color: -fx-bg-secondary;
+    -fx-background-color: #FFFFFF;
     -fx-padding: 28 32 32 32;
     -fx-spacing: 8;
-    -fx-effect: dropshadow(gaussian, -fx-shadow, 8, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 2);
 }
 
 .form-title {
     -fx-font-size: 20px;
     -fx-font-weight: bold;
-    -fx-text-fill: -fx-text-primary;
+    -fx-text-fill: #1A1A1A;
     -fx-padding: 0 0 12 0;
 }
 
@@ -108,30 +53,29 @@
 .field-label {
     -fx-font-size: 12px;
     -fx-font-weight: bold;
-    -fx-text-fill: -fx-text-secondary;
+    -fx-text-fill: #555555;
     -fx-padding: 8 0 2 0;
 }
 
 .text-field {
-    -fx-background-color: -fx-bg-tertiary;
-    -fx-border-color: -fx-border-primary;
+    -fx-background-color: #F5F5F5;
+    -fx-border-color: #E0E0E0;
     -fx-border-radius: 6px;
     -fx-background-radius: 6px;
     -fx-padding: 10 12;
     -fx-font-size: 14px;
-    -fx-text-fill: -fx-text-primary;
 }
 
 .text-field:focused {
-    -fx-border-color: -fx-accent;
-    -fx-background-color: -fx-bg-secondary;
+    -fx-border-color: #4CAF50;
+    -fx-background-color: #FFFFFF;
     -fx-effect: dropshadow(gaussian, rgba(76,175,80,0.2), 4, 0, 0, 0);
 }
 
 /* --- Buttons ----------------------------------------------- */
 .primary-button {
-    -fx-background-color: -fx-accent;
-    -fx-text-fill: -fx-text-inverse;
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-padding: 12 24;
@@ -140,21 +84,21 @@
 }
 
 .primary-button:hover {
-    -fx-background-color: -fx-accent-hover;
+    -fx-background-color: #43A047;
 }
 
 .primary-button:pressed {
-    -fx-background-color: -fx-accent-pressed;
+    -fx-background-color: #388E3C;
 }
 
 .primary-button:disabled {
     -fx-background-color: #A5D6A7;
-    -fx-text-fill: -fx-text-inverse;
+    -fx-text-fill: #FFFFFF;
 }
 
 /* --- Links and secondary elements -------------------------- */
 .link {
-    -fx-text-fill: -fx-accent;
+    -fx-text-fill: #4CAF50;
     -fx-font-size: 13px;
     -fx-underline: false;
     -fx-border-color: transparent;
@@ -162,12 +106,12 @@
 }
 
 .link:hover {
-    -fx-text-fill: -fx-accent-hover;
+    -fx-text-fill: #2E7D32;
     -fx-underline: true;
 }
 
 .secondary-text {
-    -fx-text-fill: -fx-text-secondary;
+    -fx-text-fill: #757575;
     -fx-font-size: 13px;
 }
 
@@ -177,67 +121,52 @@
 
 /* --- Error / Status Labels --------------------------------- */
 .error-label {
-    -fx-background-color: -fx-error-bg;
-    -fx-text-fill: -fx-error-text;
+    -fx-background-color: #FFEBEE;
+    -fx-text-fill: #C62828;
     -fx-padding: 10 12;
     -fx-background-radius: 4px;
     -fx-font-size: 13px;
-    -fx-border-color: -fx-error-border;
+    -fx-border-color: #FFCDD2;
     -fx-border-radius: 4px;
     -fx-border-width: 1px;
 }
 
 /* --- Toolbar (main window) --------------------------------- */
 .toolbar {
-    -fx-background-color: -fx-bg-header;
+    -fx-background-color: #2D2D2D;
     -fx-padding: 12 16;
     -fx-spacing: 12;
 }
 
 .toolbar-username {
-    -fx-text-fill: -fx-text-tertiary;
+    -fx-text-fill: #9E9E9E;
     -fx-font-size: 13px;
-}
-
-.toolbar-button {
-    -fx-background-color: transparent;
-    -fx-text-fill: -fx-text-tertiary;
-    -fx-font-size: 13px;
-    -fx-cursor: hand;
-    -fx-border-color: -fx-border-secondary;
-    -fx-border-radius: 4px;
-    -fx-padding: 4 12;
-}
-
-.toolbar-button:hover {
-    -fx-background-color: -fx-bg-hover;
-    -fx-text-fill: -fx-text-inverse;
 }
 
 .logout-button {
     -fx-background-color: transparent;
-    -fx-text-fill: -fx-text-tertiary;
+    -fx-text-fill: #9E9E9E;
     -fx-font-size: 13px;
     -fx-cursor: hand;
-    -fx-border-color: -fx-border-secondary;
+    -fx-border-color: #555555;
     -fx-border-radius: 4px;
     -fx-padding: 4 12;
 }
 
 .logout-button:hover {
-    -fx-background-color: -fx-bg-hover;
-    -fx-text-fill: -fx-text-inverse;
+    -fx-background-color: #3A3A3A;
+    -fx-text-fill: #FFFFFF;
 }
 
 /* --- Toolbar branding + year nav --------------------------- */
 .app-title-small {
-    -fx-text-fill: -fx-text-inverse;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 16px;
     -fx-font-weight: bold;
 }
 
 .year-label {
-    -fx-text-fill: -fx-text-inverse;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-min-width: 36px;
@@ -246,145 +175,108 @@
 
 .year-nav-btn {
     -fx-background-color: transparent;
-    -fx-text-fill: -fx-text-tertiary;
+    -fx-text-fill: #9E9E9E;
     -fx-font-size: 18px;
     -fx-cursor: hand;
     -fx-padding: 0 6;
 }
 
 .year-nav-btn:hover {
-    -fx-text-fill: -fx-text-inverse;
+    -fx-text-fill: #FFFFFF;
 }
 
 .year-nav-btn:disabled {
-    -fx-text-fill: -fx-border-secondary;
+    -fx-text-fill: #555555;
 }
 
 .toolbar-separator {
-    -fx-background-color: -fx-border-secondary;
+    -fx-background-color: #555555;
     -fx-pref-width: 1px;
     -fx-pref-height: 20px;
 }
 
-/* --- Search bar -------------------------------------------- */
-.search-bar {
-    -fx-background-color: -fx-bg-secondary;
+/* --- Habits scroll + container ----------------------------- */
+.habits-scroll {
+    -fx-background-color: transparent;
+    -fx-background: #F8F9FA;
+    -fx-border-color: transparent;
+}
+
+.habits-container {
+    -fx-background-color: #F8F9FA;
+    -fx-padding: 16;
+}
+
+/* --- Add habit bottom bar ---------------------------------- */
+.add-habit-bar {
+    -fx-background-color: #FFFFFF;
     -fx-padding: 12 16;
-    -fx-border-color: transparent transparent -fx-border-primary transparent;
+    -fx-border-color: #E0E0E0 transparent transparent transparent;
     -fx-border-width: 1px;
 }
 
-.search-field {
-    -fx-background-color: -fx-bg-tertiary;
-    -fx-border-color: -fx-border-primary;
+.add-habit-field {
+    -fx-background-color: #F5F5F5;
+    -fx-border-color: #E0E0E0;
     -fx-border-radius: 6px;
     -fx-background-radius: 6px;
     -fx-padding: 8 12;
     -fx-font-size: 13px;
-    -fx-text-fill: -fx-text-primary;
+}
+
+.add-habit-field:focused {
+    -fx-border-color: #4CAF50;
+    -fx-background-color: #FFFFFF;
+}
+
+/* --- Main window placeholder ------------------------------- */
+.placeholder-area {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 40;
+    -fx-background-radius: 6px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 6, 0, 0, 1);
+}
+
+.placeholder-text {
+    -fx-font-size: 16px;
+    -fx-text-fill: #757575;
+}
+
+.placeholder-subtext {
+    -fx-font-size: 13px;
+    -fx-text-fill: #BDBDBD;
+}
+
+/* --- Search bar -------------------------------------------- */
+.search-bar {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 12 16;
+    -fx-border-color: transparent transparent #E0E0E0 transparent;
+    -fx-border-width: 1px;
+}
+
+.search-field {
+    -fx-background-color: #F5F5F5;
+    -fx-border-color: #E0E0E0;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 8 12;
+    -fx-font-size: 13px;
 }
 
 .search-field:focused {
-    -fx-border-color: -fx-accent;
-    -fx-background-color: -fx-bg-secondary;
+    -fx-border-color: #4CAF50;
+    -fx-background-color: #FFFFFF;
 }
 
 .clear-search-btn {
     -fx-background-color: transparent;
-    -fx-text-fill: -fx-text-tertiary;
+    -fx-text-fill: #9E9E9E;
     -fx-font-size: 18px;
     -fx-cursor: hand;
     -fx-padding: 4 8;
 }
 
 .clear-search-btn:hover {
-    -fx-text-fill: -fx-text-primary;
-}
-
-/* --- Habits scroll + container ----------------------------- */
-.habits-scroll {
-    -fx-background-color: transparent;
-    -fx-background: -fx-bg-primary;
-    -fx-border-color: transparent;
-}
-
-.habits-container {
-    -fx-background-color: -fx-bg-primary;
-    -fx-padding: 16;
-}
-
-/* --- Add habit bottom bar ---------------------------------- */
-.add-habit-bar {
-    -fx-background-color: -fx-bg-secondary;
-    -fx-padding: 12 16;
-    -fx-border-color: -fx-border-primary transparent transparent transparent;
-    -fx-border-width: 1px;
-}
-
-.add-habit-field {
-    -fx-background-color: -fx-bg-tertiary;
-    -fx-border-color: -fx-border-primary;
-    -fx-border-radius: 6px;
-    -fx-background-radius: 6px;
-    -fx-padding: 8 12;
-    -fx-font-size: 13px;
-    -fx-text-fill: -fx-text-primary;
-}
-
-.add-habit-field:focused {
-    -fx-border-color: -fx-accent;
-    -fx-background-color: -fx-bg-secondary;
-}
-
-/* --- Main window placeholder ------------------------------- */
-.placeholder-area {
-    -fx-background-color: -fx-bg-secondary;
-    -fx-padding: 40;
-    -fx-background-radius: 6px;
-    -fx-effect: dropshadow(gaussian, -fx-shadow, 6, 0, 0, 1);
-}
-
-.placeholder-text {
-    -fx-font-size: 16px;
-    -fx-text-fill: -fx-text-secondary;
-}
-
-.placeholder-subtext {
-    -fx-font-size: 13px;
-    -fx-text-fill: -fx-text-tertiary;
-}
-
-/* --- Habit row styles (for programmatic components) -------- */
-.habit-row {
-    -fx-background-color: -fx-bg-secondary;
-    -fx-background-radius: 6px;
-    -fx-effect: dropshadow(gaussian, -fx-shadow, 6, 0, 0, 1);
-}
-
-.habit-name-label {
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-text-fill: -fx-text-primary;
-}
-
-.habit-stats-label {
-    -fx-font-size: 12px;
-    -fx-text-fill: -fx-text-secondary;
-}
-
-.habit-delete-btn {
-    -fx-background-color: transparent;
-    -fx-text-fill: -fx-text-tertiary;
-    -fx-font-size: 16px;
-    -fx-cursor: hand;
-    -fx-padding: 0 4;
-}
-
-.habit-delete-btn:hover {
-    -fx-text-fill: #E53935;
-}
-
-.heatmap-label {
-    -fx-font-size: 9px;
-    -fx-text-fill: -fx-text-secondary;
+    -fx-text-fill: #1A1A1A;
 }
