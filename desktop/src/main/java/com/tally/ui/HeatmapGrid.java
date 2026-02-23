@@ -146,6 +146,9 @@ public class HeatmapGrid extends VBox {
         cellGrid = buildCellGrid(gridStart, totalWeeks, yearStart, yearEnd);
         Pane dividerLines = buildMonthDividerLines(gridStart, totalWeeks, yearStart, yearEnd);
 
+        // Prevent divider lines from affecting layout bounds
+        dividerLines.setManaged(false);
+
         cellContainer.getChildren().addAll(cellGrid, dividerLines);
 
         mainRow.getChildren().addAll(dayLabels, cellContainer);
