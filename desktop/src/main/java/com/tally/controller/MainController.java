@@ -39,6 +39,7 @@ public class MainController {
     @FXML private Label yearLabel;
     @FXML private Button prevYearBtn;
     @FXML private Button nextYearBtn;
+    @FXML private Button toggleMonthLinesBtn;
     @FXML private VBox habitsContainer;
     @FXML private VBox loadingPane;
     @FXML private VBox emptyPane;
@@ -517,6 +518,21 @@ public class MainController {
         Thread thread = new Thread(exportTask);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    // -------------------------------------------------------------------------
+    // Month Lines Toggle
+    // -------------------------------------------------------------------------
+
+    @FXML
+    private void onToggleMonthLines() {
+        // Toggle month lines for all habit rows
+        for (javafx.scene.Node node : habitsContainer.getChildren()) {
+            if (node instanceof HabitRow) {
+                HabitRow habitRow = (HabitRow) node;
+                habitRow.toggleMonthLines();
+            }
+        }
     }
 
     // -------------------------------------------------------------------------

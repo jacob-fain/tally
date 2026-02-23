@@ -118,6 +118,19 @@ public class HabitRow extends VBox {
     }
 
     // -------------------------------------------------------------------------
+    // Month lines toggle
+    // -------------------------------------------------------------------------
+
+    /**
+     * Toggle month divider lines on/off in the heatmap.
+     */
+    public void toggleMonthLines() {
+        if (heatmapGrid != null) {
+            heatmapGrid.toggleMonthLines();
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Stats calculation
     // -------------------------------------------------------------------------
 

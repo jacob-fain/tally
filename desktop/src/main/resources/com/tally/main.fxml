@@ -24,6 +24,11 @@
 
             <Separator orientation="VERTICAL" styleClass="toolbar-separator"/>
 
+            <!-- Month lines toggle -->
+            <Button fx:id="toggleMonthLinesBtn" text="Month Lines" onAction="#onToggleMonthLines" styleClass="toolbar-button"/>
+
+            <Separator orientation="VERTICAL" styleClass="toolbar-separator"/>
+
             <Label fx:id="usernameLabel" styleClass="toolbar-username"/>
             <Button text="Export" onAction="#onExportClicked" styleClass="toolbar-button"/>
             <Button text="Logout" onAction="#onLogoutClicked" styleClass="logout-button"/>

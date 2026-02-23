@@ -20,6 +20,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.TextStyle;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -52,6 +53,7 @@ public class HeatmapGrid extends VBox {
     private static final int CELL_SIZE = 12;
     private static final int CELL_GAP = 3;
     private static final int DAYS_IN_WEEK = 7;
+    private static final double DIVIDER_PADDING = 0.5; // Padding around divider lines
 
     // Color scheme
     private static final Color COMPLETED_COLOR = Color.web("#4CAF50"); // Green for completed
@@ -75,6 +77,9 @@ public class HeatmapGrid extends VBox {
     // The inner grid we can rebuild when logs are updated
     private GridPane cellGrid;
 
+    // Flag to control whether month divider lines are shown
+    private boolean showMonthLines = true;
+
     public HeatmapGrid(Long habitId, int year, String hexColor,
                        List<DailyLog> logs, BiConsumer<LocalDate, Boolean> onCellToggled) {
         this.habitId = habitId;
@@ -94,6 +99,14 @@ public class HeatmapGrid extends VBox {
      */
     public void updateLogs(List<DailyLog> logs) {
         buildGrid(logs);
+    }
+
+    /**
+     * Toggle month divider lines on/off.
+     */
+    public void toggleMonthLines() {
+        showMonthLines = !showMonthLines;
+        buildGrid(new ArrayList<>(logsByDate.values()));
     }
 
     // -------------------------------------------------------------------------
@@ -207,44 +220,69 @@ public class HeatmapGrid extends VBox {
         Pane pane = new Pane();
         pane.setMouseTransparent(true); // Don't interfere with cell clicks
 
-        Month currentMonth = null;
-        LocalDate today = LocalDate.now();
+        // If month lines are disabled, return empty pane
+        if (!showMonthLines) {
+            return pane;
+        }
 
+        // Draw vertical line segments between cells where month changes (left to right)
+        for (int week = 1; week < totalWeeks; week++) {
+            for (int dow = 0; dow < DAYS_IN_WEEK; dow++) {
+                LocalDate currentDate = gridStart.plusWeeks(week).plusDays(dow);
+                LocalDate leftDate = gridStart.plusWeeks(week - 1).plusDays(dow);
+
+                // Skip if either date is outside the year
+                boolean currentInRange = !currentDate.isBefore(yearStart) && !currentDate.isAfter(yearEnd);
+                boolean leftInRange = !leftDate.isBefore(yearStart) && !leftDate.isAfter(yearEnd);
+
+                // Draw line segment if both dates are valid and in different months
+                if (currentInRange && leftInRange &&
+                    currentDate.getMonth() != leftDate.getMonth()) {
+
+                    // Line hugs the left edge of the current cell
+                    // Don't extend up, only extend down 1px to meet horizontal lines below
+                    double xPos = week * (CELL_SIZE + CELL_GAP);
+                    double yStart = dow * (CELL_SIZE + CELL_GAP);
+                    double yEnd = dow * (CELL_SIZE + CELL_GAP) + CELL_SIZE + 1;
+
+                    Line line = new Line(xPos, yStart, xPos, yEnd);
+                    line.setStroke(Color.YELLOW);
+                    line.setStrokeWidth(3);
+                    line.setOpacity(1.0);
+                    line.setStrokeLineCap(javafx.scene.shape.StrokeLineCap.SQUARE);
+                    pane.getChildren().add(line);
+                }
+            }
+        }
+
+        // Draw horizontal line segments between cells where month changes (top to bottom)
         for (int week = 0; week < totalWeeks; week++) {
-            LocalDate weekStart = gridStart.plusWeeks(week);
+            for (int dow = 1; dow < DAYS_IN_WEEK; dow++) {
+                LocalDate currentDate = gridStart.plusWeeks(week).plusDays(dow);
+                LocalDate aboveDate = gridStart.plusWeeks(week).plusDays(dow - 1);
 
-            // Find the first valid day in this week
-            Month weekMonth = null;
-            for (int d = 0; d < 7; d++) {
-                LocalDate day = weekStart.plusDays(d);
-                if (!day.isBefore(yearStart) && !day.isAfter(yearEnd)) {
-                    weekMonth = day.getMonth();
-                    break;
+                // Skip if either date is outside the year
+                boolean currentInRange = !currentDate.isBefore(yearStart) && !currentDate.isAfter(yearEnd);
+                boolean aboveInRange = !aboveDate.isBefore(yearStart) && !aboveDate.isAfter(yearEnd);
+
+                // Draw line segment if both dates are valid and in different months
+                if (currentInRange && aboveInRange &&
+                    currentDate.getMonth() != aboveDate.getMonth()) {
+
+                    // Line hugs the top edge of the current cell
+                    // Don't extend left, only extend right 1px to meet vertical lines
+                    double xStart = week * (CELL_SIZE + CELL_GAP);
+                    double xEnd = week * (CELL_SIZE + CELL_GAP) + CELL_SIZE + 1;
+                    double yPos = dow * (CELL_SIZE + CELL_GAP);
+
+                    Line line = new Line(xStart, yPos, xEnd, yPos);
+                    line.setStroke(Color.YELLOW);
+                    line.setStrokeWidth(3);
+                    line.setOpacity(1.0);
+                    line.setStrokeLineCap(javafx.scene.shape.StrokeLineCap.SQUARE);
+                    pane.getChildren().add(line);
                 }
             }
-
-            if (weekMonth == null) continue;
-
-            // If month changed, draw a divider line
-            if (currentMonth != null && weekMonth != currentMonth && week > 0) {
-                // Calculate the height of the divider (only through days in the previous month)
-                double lineHeight = 0;
-                for (int d = 0; d < 7; d++) {
-                    LocalDate day = gridStart.plusWeeks(week - 1).plusDays(d);
-                    if (!day.isBefore(yearStart) && !day.isAfter(yearEnd) &&
-                        day.getMonth() == currentMonth) {
-                        lineHeight = (d + 1) * (CELL_SIZE + CELL_GAP);
-                    }
-                }
-
-                double xPos = week * (CELL_SIZE + CELL_GAP) - CELL_GAP / 2.0;
-                Line line = new Line(xPos, 0, xPos, lineHeight);
-                line.setStroke(Color.web("#CCCCCC"));
-                line.setStrokeWidth(1);
-                pane.getChildren().add(line);
-            }
-
-            currentMonth = weekMonth;
         }
 
         return pane;
