@@ -29,8 +29,12 @@ public class RegisterController {
     private void initialize() {
         confirmPasswordField.setOnAction(event -> onRegisterClicked());
 
-        // Apply saved theme
-        themeManager.applyTheme(usernameField.getScene());
+        // Apply saved theme when scene is available
+        usernameField.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                themeManager.applyTheme(newScene);
+            }
+        });
     }
 
     @FXML

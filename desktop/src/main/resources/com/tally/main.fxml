@@ -7,7 +7,6 @@
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.tally.controller.MainController"
             styleClass="root-container"
-            stylesheets="@css/app-dark.css"
             prefWidth="960"
             prefHeight="600">
 
@@ -30,7 +29,7 @@
             <Separator orientation="VERTICAL" styleClass="toolbar-separator"/>
 
             <Label fx:id="usernameLabel" styleClass="toolbar-username"/>
-            <Button text="Export" onAction="#onExportClicked" styleClass="toolbar-button"/>
+            <Button fx:id="exportBtn" text="Export" onAction="#onExportClicked" styleClass="toolbar-button"/>
             <Button text="Logout" onAction="#onLogoutClicked" styleClass="logout-button"/>
         </HBox>
     </top>

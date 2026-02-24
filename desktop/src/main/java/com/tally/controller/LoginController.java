@@ -45,8 +45,12 @@ public class LoginController {
         // Allow pressing Enter in the password field to trigger login
         passwordField.setOnAction(event -> onLoginClicked());
 
-        // Apply saved theme
-        themeManager.applyTheme(usernameField.getScene());
+        // Apply saved theme when scene is available
+        usernameField.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                themeManager.applyTheme(newScene);
+            }
+        });
     }
 
     @FXML

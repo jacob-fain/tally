@@ -7,6 +7,7 @@ import com.tally.service.AuthService;
 import com.tally.service.ExportService;
 import com.tally.service.HabitService;
 import com.tally.service.LogService;
+import com.tally.service.ThemeManager;
 import com.tally.ui.HabitRow;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -40,6 +41,7 @@ public class MainController {
     @FXML private Button prevYearBtn;
     @FXML private Button nextYearBtn;
     @FXML private Button toggleMonthLinesBtn;
+    @FXML private Button exportBtn;
     @FXML private VBox habitsContainer;
     @FXML private VBox loadingPane;
     @FXML private VBox emptyPane;
@@ -52,6 +54,7 @@ public class MainController {
     private final HabitService habitService = HabitService.getInstance();
     private final LogService logService = LogService.getInstance();
     private final ExportService exportService = ExportService.getInstance();
+    private final ThemeManager themeManager = ThemeManager.getInstance();
 
     private static final int MIN_YEAR = 2020; // Reasonable minimum - adjust if needed
     private int currentYear = LocalDate.now().getYear();
@@ -81,6 +84,13 @@ public class MainController {
 
         // Set up keyboard shortcuts
         setupKeyboardShortcuts();
+
+        // Apply saved theme when scene is available
+        yearLabel.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                themeManager.applyTheme(newScene);
+            }
+        });
 
         System.out.println("About to call loadHabits()");
         loadHabits();
@@ -317,25 +327,13 @@ public class MainController {
         habitsContainer.getChildren().forEach(node -> {
             if (node instanceof HabitRow row) {
                 // Check if habit name contains the query (case-insensitive)
-                String habitName = getHabitNameForRow(row);
+                String habitName = row.getName();
                 boolean matches = habitName.toLowerCase().contains(lowerQuery);
 
                 row.setVisible(matches);
                 row.setManaged(matches);
             }
         });
-    }
-
-    /**
-     * Get the habit name for a HabitRow by searching through our habits list.
-     */
-    private String getHabitNameForRow(HabitRow row) {
-        Long habitId = row.getHabitId();
-        return habits.stream()
-                .filter(h -> h.getId().equals(habitId))
-                .findFirst()
-                .map(Habit::getName)
-                .orElse("");
     }
 
     @FXML
@@ -357,18 +355,8 @@ public class MainController {
         Tooltip.install(prevYearBtn, new Tooltip("Previous Year (Alt+←)"));
         Tooltip.install(nextYearBtn, new Tooltip("Next Year (Alt+→)"));
         Tooltip.install(addHabitBtn, new Tooltip("Add Habit (" + modifierKey + "+N to focus)"));
+        Tooltip.install(exportBtn, new Tooltip("Export Data (" + modifierKey + "+E)"));
         searchField.setTooltip(new Tooltip(modifierKey + "+F to focus, Esc to clear"));
-
-        Tooltip exportTooltip = new Tooltip("Export Data (" + modifierKey + "+E)");
-        // Find export button by searching for it in the scene
-        Platform.runLater(() -> {
-            yearLabel.getScene().getRoot().lookupAll(".toolbar-button").forEach(node -> {
-                if (node instanceof Button btn && "Export".equals(btn.getText())) {
-                    Tooltip.install(btn, exportTooltip);
-                }
-            });
-        });
-
         newHabitNameField.setTooltip(new Tooltip(modifierKey + "+N to focus, Esc to clear"));
     }
 

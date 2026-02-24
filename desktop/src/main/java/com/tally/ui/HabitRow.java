@@ -41,6 +41,7 @@ public class HabitRow extends VBox {
     private final Runnable onDeleteRequested;
 
     public Long getHabitId() { return habit.getId(); }
+    public String getName() { return habit.getName(); }
 
     public HabitRow(Habit habit, int year, List<DailyLog> logs, Runnable onDeleteRequested) {
         this.habit = habit;
