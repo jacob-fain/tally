@@ -20,8 +20,19 @@ public class ThemeManager {
     private static final String DARK_THEME = "dark";
 
     private String currentTheme;
+    private final Path themeFilePath;
 
     private ThemeManager() {
+        this.themeFilePath = getDefaultThemeFilePath();
+        this.currentTheme = loadTheme();
+    }
+
+    /**
+     * Package-private constructor for testing.
+     * Allows injection of custom theme file path.
+     */
+    ThemeManager(Path themeFilePath) {
+        this.themeFilePath = themeFilePath;
         this.currentTheme = loadTheme();
     }
 
@@ -69,9 +80,9 @@ public class ThemeManager {
     }
 
     /**
-     * Get theme file path, returns null if user.home is not available (e.g. during tests).
+     * Get default theme file path, returns null if user.home is not available.
      */
-    private Path getThemeFilePath() {
+    private static Path getDefaultThemeFilePath() {
         String userHome = System.getProperty("user.home");
         if (userHome == null || userHome.isBlank()) {
             return null; // Can't persist theme (e.g., during tests)
@@ -85,9 +96,8 @@ public class ThemeManager {
      */
     private String loadTheme() {
         try {
-            Path path = getThemeFilePath();
-            if (path != null && Files.exists(path)) {
-                String theme = Files.readString(path).trim();
+            if (themeFilePath != null && Files.exists(themeFilePath)) {
+                String theme = Files.readString(themeFilePath).trim();
                 if (DARK_THEME.equals(theme)) {
                     return DARK_THEME;
                 }
@@ -103,17 +113,16 @@ public class ThemeManager {
      */
     private void saveTheme() {
         try {
-            Path path = getThemeFilePath();
-            if (path == null) {
+            if (themeFilePath == null) {
                 return; // Can't persist (e.g., during tests)
             }
 
-            Files.createDirectories(path.getParent());
-            Files.writeString(path, currentTheme);
+            Files.createDirectories(themeFilePath.getParent());
+            Files.writeString(themeFilePath, currentTheme);
 
             // Set secure permissions (owner read/write only)
             try {
-                Files.setPosixFilePermissions(path,
+                Files.setPosixFilePermissions(themeFilePath,
                     java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
             } catch (UnsupportedOperationException e) {
                 // Windows doesn't support POSIX permissions, skip
@@ -121,5 +130,31 @@ public class ThemeManager {
         } catch (IOException e) {
             System.err.println("Failed to save theme preference: " + e.getMessage());
         }
+    }
+
+    /**
+     * Set theme programmatically (for testing).
+     * Package-private for test access.
+     */
+    void setTheme(String theme) {
+        if (theme == null || theme.isBlank()) {
+            return; // Invalid theme, keep current
+        }
+
+        String trimmed = theme.trim();
+        if (DARK_THEME.equals(trimmed) || LIGHT_THEME.equals(trimmed)) {
+            currentTheme = trimmed;
+            saveTheme();
+        }
+        // Else: invalid theme, keep current
+    }
+
+    /**
+     * Toggle theme without applying to a scene (for testing).
+     * Package-private for test access.
+     */
+    void toggleTheme() {
+        currentTheme = isDarkMode() ? LIGHT_THEME : DARK_THEME;
+        saveTheme();
     }
 }

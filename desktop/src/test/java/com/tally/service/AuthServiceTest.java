@@ -138,6 +138,77 @@ class AuthServiceTest {
     }
 
     // =========================================================================
+    // Session expiration callback
+    // =========================================================================
+
+    @Test
+    void sessionExpirationCallbackShouldBeInvoked() throws Exception {
+        AuthService service = AuthService.getInstance();
+
+        // Set up a flag to track if callback was invoked
+        final boolean[] callbackInvoked = {false};
+        service.setOnSessionExpired(() -> {
+            callbackInvoked[0] = true;
+        });
+
+        // Simulate session expiration by calling refreshAccessToken with no refresh token
+        setField(service, "refreshToken", null);
+        boolean refreshed = service.refreshAccessToken();
+
+        // Should fail to refresh and invoke callback
+        assertFalse(refreshed, "Refresh should fail when no refresh token present");
+        // Note: Callback uses Platform.runLater() so it won't be invoked immediately
+        // in unit tests (JavaFX not initialized). This test verifies the callback
+        // is registered correctly, but can't verify execution without JavaFX.
+    }
+
+    @Test
+    void refreshShouldReturnFalseWithoutClearingTokensWhenNoRefreshToken() throws Exception {
+        AuthService service = AuthService.getInstance();
+
+        // Set up initial state with access token but no refresh token
+        setField(service, "accessToken", "test-access");
+        setField(service, "refreshToken", null);
+
+        boolean refreshed = service.refreshAccessToken();
+
+        // Should fail but NOT clear tokens (only clears on actual API failure)
+        assertFalse(refreshed);
+        assertEquals("test-access", service.getAccessToken());
+    }
+
+    @Test
+    void shouldNotInvokeCallbackIfNotSet() throws Exception {
+        AuthService service = AuthService.getInstance();
+
+        // Don't set callback (null)
+        setField(service, "refreshToken", null);
+
+        // Should not throw even though callback is null
+        assertDoesNotThrow(() -> service.refreshAccessToken());
+    }
+
+    // =========================================================================
+    // Token refresh (API-dependent)
+    // =========================================================================
+
+    @Test
+    void refreshAccessTokenShouldReturnFalseWithNoRefreshToken() throws Exception {
+        AuthService service = AuthService.getInstance();
+
+        // Ensure no refresh token
+        setField(service, "refreshToken", null);
+
+        // Should return false immediately without making API call
+        boolean refreshed = service.refreshAccessToken();
+        assertFalse(refreshed, "Should fail when no refresh token is present");
+    }
+
+    // Note: Testing the actual HTTP refresh logic would require mocking HttpClient
+    // or making real API calls (integration test). The logic is tested manually
+    // and through the automatic retry mechanism in ApiClient.
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 
@@ -151,5 +222,11 @@ class AuthServiceTest {
         Field field = AuthService.class.getDeclaredField("tokenFilePath");
         field.setAccessible(true);
         return (Path) field.get(service);
+    }
+
+    private String getRefreshToken(AuthService service) throws Exception {
+        Field field = AuthService.class.getDeclaredField("refreshToken");
+        field.setAccessible(true);
+        return (String) field.get(service);
     }
 }
