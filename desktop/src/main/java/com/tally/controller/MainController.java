@@ -67,6 +67,9 @@ public class MainController {
         // Can't navigate to future years
         nextYearBtn.setDisable(currentYear >= LocalDate.now().getYear());
 
+        // Register callback for session expiration (auto-navigate to login when refresh token expires)
+        authService.setOnSessionExpired(this::handleSessionExpired);
+
         // Allow pressing Enter in the new habit field to add a habit
         newHabitNameField.setOnAction(event -> onAddHabitClicked());
 
@@ -532,6 +535,23 @@ public class MainController {
                 HabitRow habitRow = (HabitRow) node;
                 habitRow.toggleMonthLines();
             }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Session Management
+    // -------------------------------------------------------------------------
+
+    /**
+     * Called automatically when the refresh token expires (after 7 days).
+     * Navigates back to login screen.
+     */
+    private void handleSessionExpired() {
+        System.out.println("Session expired - navigating to login screen");
+        try {
+            TallyApp.showLoginScreen();
+        } catch (IOException e) {
+            System.err.println("Failed to navigate to login: " + e.getMessage());
         }
     }
 

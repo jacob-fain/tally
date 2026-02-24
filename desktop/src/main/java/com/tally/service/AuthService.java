@@ -2,6 +2,7 @@ package com.tally.service;
 
 import com.tally.model.AuthResponse;
 import com.tally.model.ApiError;
+import javafx.application.Platform;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
@@ -52,6 +53,9 @@ public class AuthService {
     private String refreshToken;
     private String username;
     private String email;
+
+    // Callback for session expiration (when refresh token fails)
+    private Runnable onSessionExpired;
 
     private AuthService() {
         this.apiClient = ApiClient.getInstance();
@@ -149,6 +153,12 @@ public class AuthService {
         } else {
             // Refresh token is expired or invalid — user must log in again
             logout();
+
+            // Notify listener that session expired (so UI can navigate to login)
+            if (onSessionExpired != null) {
+                Platform.runLater(onSessionExpired);
+            }
+
             return false;
         }
     }
@@ -181,6 +191,16 @@ public class AuthService {
     public String getAccessToken() { return accessToken; }
     public String getUsername() { return username; }
     public String getEmail() { return email; }
+
+    /**
+     * Set a callback to be invoked when the session expires (refresh token fails).
+     * The callback will be run on the JavaFX Application Thread.
+     *
+     * @param onSessionExpired Callback to navigate to login screen
+     */
+    public void setOnSessionExpired(Runnable onSessionExpired) {
+        this.onSessionExpired = onSessionExpired;
+    }
 
     // -------------------------------------------------------------------------
     // Token persistence
