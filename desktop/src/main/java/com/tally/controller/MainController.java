@@ -4,21 +4,25 @@ import com.tally.TallyApp;
 import com.tally.model.DailyLog;
 import com.tally.model.Habit;
 import com.tally.service.AuthService;
+import com.tally.service.ExportService;
 import com.tally.service.HabitService;
 import com.tally.service.LogService;
+import com.tally.service.ThemeManager;
 import com.tally.ui.HabitRow;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Controller for the main window (main.fxml).
@@ -36,15 +40,21 @@ public class MainController {
     @FXML private Label yearLabel;
     @FXML private Button prevYearBtn;
     @FXML private Button nextYearBtn;
+    @FXML private Button toggleMonthLinesBtn;
+    @FXML private Button exportBtn;
     @FXML private VBox habitsContainer;
     @FXML private VBox loadingPane;
     @FXML private VBox emptyPane;
     @FXML private TextField newHabitNameField;
     @FXML private Button addHabitBtn;
+    @FXML private TextField searchField;
+    @FXML private Button clearSearchBtn;
 
     private final AuthService authService = AuthService.getInstance();
     private final HabitService habitService = HabitService.getInstance();
     private final LogService logService = LogService.getInstance();
+    private final ExportService exportService = ExportService.getInstance();
+    private final ThemeManager themeManager = ThemeManager.getInstance();
 
     private static final int MIN_YEAR = 2020; // Reasonable minimum - adjust if needed
     private int currentYear = LocalDate.now().getYear();
@@ -60,8 +70,27 @@ public class MainController {
         // Can't navigate to future years
         nextYearBtn.setDisable(currentYear >= LocalDate.now().getYear());
 
+        // Register callback for session expiration (auto-navigate to login when refresh token expires)
+        authService.setOnSessionExpired(this::handleSessionExpired);
+
         // Allow pressing Enter in the new habit field to add a habit
         newHabitNameField.setOnAction(event -> onAddHabitClicked());
+
+        // Set up search filtering
+        setupSearchFilter();
+
+        // Set up tooltips with keyboard shortcuts
+        setupTooltips();
+
+        // Set up keyboard shortcuts
+        setupKeyboardShortcuts();
+
+        // Apply saved theme when scene is available
+        yearLabel.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                themeManager.applyTheme(newScene);
+            }
+        });
 
         System.out.println("About to call loadHabits()");
         loadHabits();
@@ -250,6 +279,268 @@ public class MainController {
         Thread thread = new Thread(task);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    // -------------------------------------------------------------------------
+    // Search/Filter
+    // -------------------------------------------------------------------------
+
+    /**
+     * Set up real-time search filtering for habits.
+     */
+    private void setupSearchFilter() {
+        searchField.textProperty().addListener((obs, oldValue, newValue) -> {
+            filterHabits(newValue);
+            // Show/hide clear button based on whether there's text
+            boolean hasText = newValue != null && !newValue.isBlank();
+            clearSearchBtn.setVisible(hasText);
+            clearSearchBtn.setManaged(hasText);
+        });
+
+        // Escape in search field clears it
+        searchField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                searchField.clear();
+                event.consume();
+            }
+        });
+    }
+
+    /**
+     * Filter visible habits based on search query.
+     * Shows/hides HabitRow components whose names match the query.
+     */
+    private void filterHabits(String query) {
+        if (query == null || query.isBlank()) {
+            // Show all habits
+            habitsContainer.getChildren().forEach(node -> {
+                if (node instanceof HabitRow) {
+                    node.setVisible(true);
+                    node.setManaged(true);
+                }
+            });
+            return;
+        }
+
+        String lowerQuery = query.toLowerCase().trim();
+
+        habitsContainer.getChildren().forEach(node -> {
+            if (node instanceof HabitRow row) {
+                // Check if habit name contains the query (case-insensitive)
+                String habitName = row.getName();
+                boolean matches = habitName.toLowerCase().contains(lowerQuery);
+
+                row.setVisible(matches);
+                row.setManaged(matches);
+            }
+        });
+    }
+
+    @FXML
+    private void onClearSearchClicked() {
+        searchField.clear();
+        searchField.requestFocus();
+    }
+
+    // -------------------------------------------------------------------------
+    // Keyboard shortcuts
+    // -------------------------------------------------------------------------
+
+    /**
+     * Add tooltips to buttons showing keyboard shortcuts.
+     */
+    private void setupTooltips() {
+        String modifierKey = System.getProperty("os.name").toLowerCase().contains("mac") ? "Cmd" : "Ctrl";
+
+        Tooltip.install(prevYearBtn, new Tooltip("Previous Year (Alt+←)"));
+        Tooltip.install(nextYearBtn, new Tooltip("Next Year (Alt+→)"));
+        Tooltip.install(addHabitBtn, new Tooltip("Add Habit (" + modifierKey + "+N to focus)"));
+        Tooltip.install(exportBtn, new Tooltip("Export Data (" + modifierKey + "+E)"));
+        searchField.setTooltip(new Tooltip(modifierKey + "+F to focus, Esc to clear"));
+        newHabitNameField.setTooltip(new Tooltip(modifierKey + "+N to focus, Esc to clear"));
+    }
+
+    /**
+     * Set up global keyboard shortcuts for the main window.
+     *
+     * Shortcuts:
+     * - Alt+Left/Right: Navigate years
+     * - Ctrl/Cmd+E: Export data
+     * - Ctrl/Cmd+T: Toggle theme
+     * - Ctrl/Cmd+N: Focus new habit field
+     * - Escape: Clear new habit field
+     */
+    private void setupKeyboardShortcuts() {
+        yearLabel.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                newScene.setOnKeyPressed(this::handleKeyPress);
+            }
+        });
+    }
+
+    private void handleKeyPress(KeyEvent event) {
+        boolean isCtrlOrCmd = event.isShortcutDown(); // Ctrl on Windows/Linux, Cmd on Mac
+
+        // Alt+Left: Previous year
+        if (event.isAltDown() && event.getCode() == KeyCode.LEFT) {
+            if (!prevYearBtn.isDisabled()) {
+                onPrevYear();
+            }
+            event.consume();
+            return;
+        }
+
+        // Alt+Right: Next year
+        if (event.isAltDown() && event.getCode() == KeyCode.RIGHT) {
+            if (!nextYearBtn.isDisabled()) {
+                onNextYear();
+            }
+            event.consume();
+            return;
+        }
+
+        // Ctrl/Cmd+E: Export
+        if (isCtrlOrCmd && event.getCode() == KeyCode.E) {
+            onExportClicked();
+            event.consume();
+            return;
+        }
+
+        // Ctrl/Cmd+N: Focus new habit field
+        if (isCtrlOrCmd && event.getCode() == KeyCode.N) {
+            newHabitNameField.requestFocus();
+            event.consume();
+            return;
+        }
+
+        // Ctrl/Cmd+F: Focus search field
+        if (isCtrlOrCmd && event.getCode() == KeyCode.F) {
+            searchField.requestFocus();
+            searchField.selectAll();
+            event.consume();
+            return;
+        }
+
+        // Escape: Clear new habit field (if focused)
+        if (event.getCode() == KeyCode.ESCAPE && newHabitNameField.isFocused()) {
+            newHabitNameField.clear();
+            event.consume();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Export data
+    // -------------------------------------------------------------------------
+
+    @FXML
+    private void onExportClicked() {
+        // Show format choice dialog
+        ChoiceDialog<String> formatDialog = new ChoiceDialog<>("CSV", "CSV", "JSON");
+        formatDialog.setTitle("Export Data");
+        formatDialog.setHeaderText("Choose export format");
+        formatDialog.setContentText("Format:");
+
+        Optional<String> formatChoice = formatDialog.showAndWait();
+        if (formatChoice.isEmpty()) {
+            return; // User cancelled
+        }
+
+        String format = formatChoice.get();
+        boolean isCsv = "CSV".equals(format);
+
+        // Show file chooser
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Export Habit Data");
+        fileChooser.setInitialFileName("tally-export-" + LocalDate.now() + (isCsv ? ".csv" : ".json"));
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter(
+                        format + " Files",
+                        isCsv ? "*.csv" : "*.json"
+                )
+        );
+
+        File file = fileChooser.showSaveDialog(TallyApp.getPrimaryStage());
+        if (file == null) {
+            return; // User cancelled
+        }
+
+        // Export in background
+        Task<Void> exportTask = new Task<>() {
+            @Override
+            protected Void call() throws Exception {
+                // Fetch all logs for all habits (all time, not just current year)
+                Map<Long, List<DailyLog>> logsMap = new HashMap<>();
+                for (Habit habit : habits) {
+                    // Fetch logs from 2020 to current year
+                    LocalDate start = LocalDate.of(MIN_YEAR, 1, 1);
+                    LocalDate end = LocalDate.of(LocalDate.now().getYear(), 12, 31);
+                    List<DailyLog> logs = logService.getLogsForHabit(habit.getId(), start, end);
+                    logsMap.put(habit.getId(), logs);
+                }
+
+                // Export to file
+                Path filePath = file.toPath();
+                if (isCsv) {
+                    exportService.exportToCsv(habits, logsMap, filePath);
+                } else {
+                    exportService.exportToJson(habits, logsMap, filePath);
+                }
+
+                return null;
+            }
+        };
+
+        exportTask.setOnSucceeded(event -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Export Successful");
+            alert.setHeaderText(null);
+            alert.setContentText("Data exported to:\n" + file.getAbsolutePath());
+            alert.showAndWait();
+        });
+
+        exportTask.setOnFailed(event -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Export Failed");
+            alert.setHeaderText("Failed to export data");
+            alert.setContentText(exportTask.getException().getMessage());
+            alert.showAndWait();
+        });
+
+        Thread thread = new Thread(exportTask);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    // -------------------------------------------------------------------------
+    // Month Lines Toggle
+    // -------------------------------------------------------------------------
+
+    @FXML
+    private void onToggleMonthLines() {
+        // Toggle month lines for all habit rows
+        for (javafx.scene.Node node : habitsContainer.getChildren()) {
+            if (node instanceof HabitRow) {
+                HabitRow habitRow = (HabitRow) node;
+                habitRow.toggleMonthLines();
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Session Management
+    // -------------------------------------------------------------------------
+
+    /**
+     * Called automatically when the refresh token expires (after 7 days).
+     * Navigates back to login screen.
+     */
+    private void handleSessionExpired() {
+        System.out.println("Session expired - navigating to login screen");
+        try {
+            TallyApp.showLoginScreen();
+        } catch (IOException e) {
+            System.err.println("Failed to navigate to login: " + e.getMessage());
+        }
     }
 
     // -------------------------------------------------------------------------

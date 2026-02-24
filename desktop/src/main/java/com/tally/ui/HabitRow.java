@@ -41,6 +41,7 @@ public class HabitRow extends VBox {
     private final Runnable onDeleteRequested;
 
     public Long getHabitId() { return habit.getId(); }
+    public String getName() { return habit.getName(); }
 
     public HabitRow(Habit habit, int year, List<DailyLog> logs, Runnable onDeleteRequested) {
         this.habit = habit;
@@ -51,8 +52,7 @@ public class HabitRow extends VBox {
 
         setSpacing(6);
         setPadding(new Insets(12, 16, 12, 16));
-        setStyle("-fx-background-color: #FFFFFF; -fx-background-radius: 6px;"
-                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 6, 0, 0, 1);");
+        getStyleClass().add("habit-row");
 
         buildRow();
     }
@@ -63,22 +63,15 @@ public class HabitRow extends VBox {
         header.setAlignment(Pos.CENTER_LEFT);
 
         Label nameLabel = new Label(habit.getName());
-        nameLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #1A1A1A;");
+        nameLabel.getStyleClass().add("habit-name-label");
         HBox.setHgrow(nameLabel, Priority.ALWAYS);
 
         statsLabel = new Label();
-        statsLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #757575;");
+        statsLabel.getStyleClass().add("habit-stats-label");
         updateStats();
 
         Button deleteBtn = new Button("×");
-        deleteBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #BDBDBD;"
-                + "-fx-font-size: 16px; -fx-cursor: hand; -fx-padding: 0 4;");
-        deleteBtn.setOnMouseEntered(e -> deleteBtn.setStyle(
-                "-fx-background-color: transparent; -fx-text-fill: #E53935;"
-                        + "-fx-font-size: 16px; -fx-cursor: hand; -fx-padding: 0 4;"));
-        deleteBtn.setOnMouseExited(e -> deleteBtn.setStyle(
-                "-fx-background-color: transparent; -fx-text-fill: #BDBDBD;"
-                        + "-fx-font-size: 16px; -fx-cursor: hand; -fx-padding: 0 4;"));
+        deleteBtn.getStyleClass().add("habit-delete-btn");
         deleteBtn.setOnAction(e -> onDeleteRequested.run());
 
         header.getChildren().addAll(nameLabel, statsLabel, deleteBtn);
@@ -123,6 +116,19 @@ public class HabitRow extends VBox {
         Thread thread = new Thread(task);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    // -------------------------------------------------------------------------
+    // Month lines toggle
+    // -------------------------------------------------------------------------
+
+    /**
+     * Toggle month divider lines on/off in the heatmap.
+     */
+    public void toggleMonthLines() {
+        if (heatmapGrid != null) {
+            heatmapGrid.toggleMonthLines();
+        }
     }
 
     // -------------------------------------------------------------------------

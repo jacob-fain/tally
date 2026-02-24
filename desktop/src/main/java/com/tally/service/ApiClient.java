@@ -66,6 +66,7 @@ public class ApiClient {
 
     /**
      * Send a POST request with a JSON body.
+     * Automatically refreshes the access token and retries if the request fails with 401.
      *
      * @param path        API path (e.g., "/api/auth/login")
      * @param body        Object to serialize as JSON request body
@@ -87,11 +88,33 @@ public class ApiClient {
             builder.header("Authorization", "Bearer " + accessToken);
         }
 
-        return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        // Automatic token refresh on 401 (only for authenticated requests, not for /auth/refresh itself)
+        if (response.statusCode() == 401 && accessToken != null && !path.equals("/api/auth/refresh")) {
+            AuthService authService = AuthService.getInstance();
+            boolean refreshed = authService.refreshAccessToken();
+
+            if (refreshed) {
+                // Retry with new token
+                String newToken = authService.getAccessToken();
+                builder = HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + path))
+                        .timeout(Duration.ofSeconds(30))
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", "Bearer " + newToken)
+                        .POST(HttpRequest.BodyPublishers.ofString(json));
+
+                response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            }
+        }
+
+        return response;
     }
 
     /**
      * Send a GET request.
+     * Automatically refreshes the access token and retries if the request fails with 401.
      *
      * @param path        API path (e.g., "/api/habits")
      * @param accessToken JWT token (required for protected endpoints)
@@ -109,11 +132,32 @@ public class ApiClient {
             builder.header("Authorization", "Bearer " + accessToken);
         }
 
-        return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        // Automatic token refresh on 401
+        if (response.statusCode() == 401 && accessToken != null) {
+            AuthService authService = AuthService.getInstance();
+            boolean refreshed = authService.refreshAccessToken();
+
+            if (refreshed) {
+                // Retry with new token
+                String newToken = authService.getAccessToken();
+                builder = HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + path))
+                        .timeout(Duration.ofSeconds(30))
+                        .header("Authorization", "Bearer " + newToken)
+                        .GET();
+
+                response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            }
+        }
+
+        return response;
     }
 
     /**
      * Send a PUT request with a JSON body.
+     * Automatically refreshes the access token and retries if the request fails with 401.
      */
     public HttpResponse<String> put(String path, Object body, String accessToken)
             throws IOException, InterruptedException {
@@ -130,11 +174,33 @@ public class ApiClient {
             builder.header("Authorization", "Bearer " + accessToken);
         }
 
-        return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        // Automatic token refresh on 401
+        if (response.statusCode() == 401 && accessToken != null) {
+            AuthService authService = AuthService.getInstance();
+            boolean refreshed = authService.refreshAccessToken();
+
+            if (refreshed) {
+                // Retry with new token
+                String newToken = authService.getAccessToken();
+                builder = HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + path))
+                        .timeout(Duration.ofSeconds(30))
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", "Bearer " + newToken)
+                        .PUT(HttpRequest.BodyPublishers.ofString(json));
+
+                response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            }
+        }
+
+        return response;
     }
 
     /**
      * Send a DELETE request.
+     * Automatically refreshes the access token and retries if the request fails with 401.
      */
     public HttpResponse<String> delete(String path, String accessToken)
             throws IOException, InterruptedException {
@@ -148,7 +214,27 @@ public class ApiClient {
             builder.header("Authorization", "Bearer " + accessToken);
         }
 
-        return httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+
+        // Automatic token refresh on 401
+        if (response.statusCode() == 401 && accessToken != null) {
+            AuthService authService = AuthService.getInstance();
+            boolean refreshed = authService.refreshAccessToken();
+
+            if (refreshed) {
+                // Retry with new token
+                String newToken = authService.getAccessToken();
+                builder = HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + path))
+                        .timeout(Duration.ofSeconds(30))
+                        .header("Authorization", "Bearer " + newToken)
+                        .DELETE();
+
+                response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            }
+        }
+
+        return response;
     }
 
     // -------------------------------------------------------------------------

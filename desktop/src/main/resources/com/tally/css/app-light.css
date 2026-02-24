@@ -143,6 +143,21 @@
     -fx-font-size: 13px;
 }
 
+.toolbar-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #9E9E9E;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-border-color: #555555;
+    -fx-border-radius: 4px;
+    -fx-padding: 4 12;
+}
+
+.toolbar-button:hover {
+    -fx-background-color: #3A3A3A;
+    -fx-text-fill: #FFFFFF;
+}
+
 .logout-button {
     -fx-background-color: transparent;
     -fx-text-fill: #9E9E9E;
@@ -279,4 +294,39 @@
 
 .clear-search-btn:hover {
     -fx-text-fill: #1A1A1A;
+}
+
+/* --- Habit row components ---------------------------------- */
+.habit-row {
+    -fx-background-color: #FFFFFF;
+    -fx-background-radius: 6px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 1);
+}
+
+.habit-name-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1A1A1A;
+}
+
+.habit-stats-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #757575;
+}
+
+.habit-delete-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #9E9E9E;
+    -fx-font-size: 16px;
+    -fx-cursor: hand;
+    -fx-padding: 0 4;
+}
+
+.habit-delete-btn:hover {
+    -fx-text-fill: #E53935;
+}
+
+.heatmap-label {
+    -fx-font-size: 9px;
+    -fx-text-fill: #757575;
 }
